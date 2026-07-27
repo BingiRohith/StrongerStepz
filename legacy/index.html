@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stronger Steps | Improve Strength, Balance & Confidence After 50</title>
+    <meta name="description" content="Join the Stronger Steps Workshop, a guided wellness experience specially designed for adults over 50. Safely improve your strength, balance, and independence.">
+    <meta name="keywords" content="health after 50, elder wellness, improve balance, strength training for seniors, independent living, senior fitness workshop">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-container">
+            <div class="logo-wrapper" style="display: flex; flex-direction: column;">
+                <div class="logo">STRONGER STEPS</div>
+                <div class="logo-subtitle" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-top: -5px;">Strength .Confidence .Independance</div>
+            </div>
+            <nav class="nav" aria-label="Main Navigation">
+                <a href="#problem" class="nav-link">The Challenge</a>
+                <a href="#about" class="nav-link">About Workshop</a>
+                <!--<a href="#bonuses" class="nav-link">Bonuses</a>-->
+                <a href="#pricing" class="btn btn-primary btn-small">Join Now</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" aria-label="Hero Introduction">
+            <div class="container hero-container">
+                <div class="hero-content">
+                    <!-- <h1 class="hero-title" style="font-size: 3.5rem;">Strength • Confidence • Independent Living</h1> -->
+                    <div class="badge " style="background-color: var(--primary); font-size: 1.1rem; padding: 10px 25px; margin-bottom: 50px;">🗓️ Workshop on June 28th from 9 AM - 1 PM</div>
+                    <p class="hero-text">Many people after 50 slowly begin to notice small changes. But aging does not mean losing yourself. With the right guidance, movement, strength, balance, and confidence can still improve.</p>
+                    <div class="hero-actions">
+                        <a href="#about" class="btn btn-secondary">Discover the Workshop</a>
+                        <button onclick="openRegisterModal()" class="btn btn-primary">Register Now</button>
+                    </div>
+                </div>
+                <div class="hero-image-wrapper">
+                    <div class="blob-bg"></div>
+                    <img src="assets/images/hero.png" alt="Happy confident senior couple walking outdoors" class="hero-image" loading="eager">
+                </div>
+            </div>
+        </section>
+
+        <!-- The Problem Section -->
+        <section id="problem" class="section changes-section">
+            <div class="container">
+                <div class="section-header text-center">
+                    <h2 class="section-title">What you missed ?</h2>
+                    <p class="section-subtitle">It happens slowly, but you are not alone in this journey.</p>
+                </div>
+                
+                <div class="changes-grid">
+                    <article class="change-card">
+                        <div class="change-icon" aria-hidden="true">🦵</div>
+                        <h3>Climbing Stairs</h3>
+                        <p>Starts feeling harder and requires more breath than it used to.</p>
+                    </article>
+                    <article class="change-card">
+                        <div class="change-icon" aria-hidden="true">🚶</div>
+                        <h3>Walking Long Distances</h3>
+                        <p>Feels tiring and requires more frequent rests along the way.</p>
+                    </article>
+                    <article class="change-card">
+                        <div class="change-icon" aria-hidden="true">⚖️</div>
+                        <h3>Balance</h3>
+                        <p>Feels uncertain at times, leading to an increasing fear of falls.</p>
+                    </article>
+                    <article class="change-card">
+                        <div class="change-icon" aria-hidden="true">🛡️</div>
+                        <h3>Confidence</h3>
+                        <p>Trust in movement slowly reduces, impacting daily activities.</p>
+                    </article>
+                </div>
+
+                <div class="stop-box glass-panel mt-5">
+                    <p>Over time, many people silently stop:</p>
+                    <ul class="stop-list">
+                        <li>Walking outside alone</li>
+                        <li>Social activities and gatherings</li>
+                        <li>Travelling confidently</li>
+                        <li>Trusting their own body</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <button onclick="openRegisterModal()" class="btn btn-primary btn-large">Register Now</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Introduction Section -->
+        <section id="about" class="section intro-section bg-light">
+            <div class="container intro-container">
+                <div class="intro-grid">
+                    <div class="intro-image-wrapper">
+                        <img src="assets/images/balance.png" alt="Zen stones balanced perfectly representing stability" class="rounded-image shadow-lg">
+                    </div>
+                    <div class="intro-text">
+                        <div class="badge">Introducing</div>
+                        <h2 class="section-title">Welcome to Stronger Steps.</h2>
+                        <!--<p class="intro-description">A guided wellness and movement workshop designed specially for adults above 50.</p>-->
+                        <p class="intro-description">
+
+We are Dr. Nikhil Mehra and Dr. Akhila, two doctors passionate about helping people age with strength, confidence, and independence.
+</p>
+ <p class="intro-description">
+At Stronger Steps, we believe that growing older should not mean giving up the activities you love. Through evidence-based exercise, nutrition guidance, and healthy aging education, we help adults stay active, improve mobility, build strength, and maintain their independence.</p>
+ <p class="intro-description">
+Our mission is simple: to help you take stronger steps toward a healthier, more active life—at every age.
+</p>
+ <p class="intro-description">
+Because healthy aging isn’t about adding years to life; it’s about adding life to years.
+</p>
+<!-- <p class="intro-description">-->
+<!--Dr. Nikhil Mehra & Dr. Akhila </br>-->
+<!--Stronger Steps </br>-->
+<!--Healthy Aging | Strength | Mobility | Independence</p>-->
+                        
+                        <!--<div class="alert-box">-->
+                        <!--    <strong>This is NOT a traditional gym workshop.</strong>-->
+                        <!--    <p>This is a calm, supportive, elder-friendly experience focused on safe movement, confidence, strength, balance, and independent living.</p>-->
+                        <!--</div>-->
+                        <div class="mt-4">
+                            <button onclick="openRegisterModal()" class="btn btn-primary">Register Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What You Will Learn & Studio Image -->
+        <section class="section learn-section">
+            <div class="container">
+                <div class="learn-container-grid">
+                    <div class="learn-content">
+                        <h2 class="section-title">What You Will Learn</h2>
+                        <p class="section-subtitle">Practical knowledge to reclaim your vitality.</p>
+                        <div class="learn-list-wrapper">
+                            <ul class="learn-list">
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>Why the body changes after 50</span>
+                                </li>
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>Why confidence slowly reduces</span>
+                                </li>
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>The hidden cycle of weakness and inactivity</span>
+                                </li>
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>How movement can improve safely</span>
+                                </li>
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>Ways to improve strength and balance</span>
+                                </li>
+                                <li>
+                                    <span class="check-icon" aria-hidden="true">✓</span>
+                                    <span>Simple principles for staying independent longer</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="openRegisterModal()" class="btn btn-primary">Register Now</button>
+                        </div>
+                    </div>
+                    <div class="learn-image-wrapper">
+                        <img src="assets/images/studio.png" alt="Bright and calm wellness studio" class="rounded-image shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison & Audience -->
+        <section class="section comparison-section bg-dark text-light">
+            <div class="container">
+                <div class="audience-grid">
+                    <div class="audience-content">
+                        <h2 class="section-title text-light">Who is this for?</h2>
+                        <div class="audience-tags">
+                            <span class="tag">Adults above 50</span>
+                            <span class="tag">Low confidence in movement</span>
+                            <span class="tag">Afraid of weakness or falls</span>
+                            <span class="tag">Families wanting elders to stay active</span>
+                        </div>
+                    </div>
+                    <div class="audience-image-wrapper">
+                         <img src="assets/images/community.png" alt="Group of smiling older adults in a support circle" class="rounded-image">
+                    </div>
+                </div>
+
+                <div class="comparison-grid mt-5">
+                    <div class="comparison-card traditional glass-panel-dark">
+                        <h3 style="color:white;">Traditional Fitness</h3>
+                        <ul>
+                            <li class="cross">Fast paced</li>
+                            <li class="cross">Intimidating</li>
+                              <li class="cross">Young crowd</li>
+                            <li class="cross">Lack of guidance</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card stronger-steps bg-white text-dark">
+                        <h3 class="text-primary">Stronger Steps</h3>
+                        <ul>
+                            <li class="check">Guided & Gentle</li>
+                            <li class="check">Calm & supportive</li>
+                            <li class="check">Elder-friendly</li>
+                            <li class="check">Focused on independence</li>
+                            <li class="check">Community-oriented</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <button onclick="openRegisterModal()" class="btn btn-primary btn-large">Register Now</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bonus Section -->
+        <!--<section id="bonuses" class="section bonus-section bg-light">-->
+        <!--    <div class="container">-->
+        <!--        <div class="text-center mb-5">-->
+        <!--            <h2 class="section-title">Bonus Materials Included</h2>-->
+        <!--            <p class="section-subtitle">Exclusive guides to support your journey at home.</p>-->
+        <!--        </div>-->
+        <!--        <div class="bonus-grid">-->
+        <!--            <article class="bonus-card glass-panel">-->
+        <!--                <img src="assets/images/book1.png" alt="Did I Lose My Strength? eBook Cover" class="bonus-img" loading="lazy">-->
+        <!--                <div class="bonus-content">-->
+        <!--                    <span class="bonus-tag">Emotional Story PDF</span>-->
+        <!--                    <h3>"Did I Lose My Strength?"</h3>-->
+        <!--                    <p>A touching story about confidence, aging, and rediscovering movement.</p>-->
+        <!--                </div>-->
+        <!--            </article>-->
+        <!--            <article class="bonus-card glass-panel">-->
+        <!--                <img src="assets/images/book2.png" alt="10 Things Your Body Can Still Improve After 50 eBook Cover" class="bonus-img" loading="lazy">-->
+        <!--                <div class="bonus-content">-->
+        <!--                    <span class="bonus-tag">Educational PDF</span>-->
+        <!--                    <h3>"10 Things Your Body Can Still Improve After 50"</h3>-->
+        <!--                    <p>Simple insights on strength, balance, walking confidence, flexibility, and independence.</p>-->
+        <!--                </div>-->
+        <!--            </article>-->
+        <!--        </div>-->
+                
+        <!--        <div class="text-center mt-5">-->
+        <!--            <button onclick="openRegisterModal()" class="btn btn-primary btn-large">Register Now</button>-->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</section>-->
+
+        <!-- Pricing / Details -->
+        <section id="pricing" class="section pricing-section">
+            <div class="container pricing-container">
+                <div class="pricing-details">
+                    <h2 class="section-title">Workshop Details</h2>
+                    <p class="section-subtitle">Everything you need in one comprehensive session.</p>
+                    <ul class="details-list">
+                        <li>
+                            <span class="detail-icon" aria-hidden="true">📍</span>
+                            Guided wellness session
+                        </li>
+                        <li>
+                            <span class="detail-icon" aria-hidden="true">💬</span>
+                            Interactive discussion
+                        </li>
+                        <li>
+                            <span class="detail-icon" aria-hidden="true">❓</span>
+                            Question & Answer session
+                        </li>
+                        <li>
+                            <span class="detail-icon" aria-hidden="true">📱</span>
+                            WhatsApp community access
+                        </li>
+                         <li>
+                            <span class="detail-icon" aria-hidden="true">✉️</span>
+strongersteps50@gmail.com                        </li>
+                    </ul>
+                </div>
+                <aside class="pricing-card">
+                    <h3 class="pricing-title">Workshop Registration</h3>
+                    <div class="price" style="font-size: 3rem;"><span style="text-decoration: line-through; color: #ff6b6b; font-size: 2rem; margin-right: 10px;">₹999</span>Giving for Free</div>
+                    <div class="pricing-includes">
+                        <p>Your pass includes:</p>
+                        <ul>
+                            <!--<li><span aria-hidden="true">✓</span> Premium Tools</li>-->
+                            <!--<li><span aria-hidden="true">✓</span> 2 premium PDFs</li>-->
+                            <li><span aria-hidden="true">✓</span> Whatsapp Community access</li>
+                        </ul>
+                    </div>
+                    <a href="#" onclick="openRegisterModal(); return false;" class="btn btn-primary btn-large btn-block mt-4">Join the Workshop</a>
+                    <p class="secure-text">🔒 Secure Checkout</p>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <h2 class="footer-title">Strength after 50 is not about becoming young again.</h2>
+            <p class="footer-subtitle">It is about:</p>
+            <ul class="footer-list">
+                <li>walking confidently</li>
+                <li>living independently</li>
+                <li>trusting your body again</li>
+            </ul>
+            <div class="footer-logo">STRONGER STEPS 👨‍⚕️</div>
+            <p class="footer-closing">Because confidence can still move forward.</p>
+        </div>
+    </footer>
+
+    <!-- Live Status Section -->
+    <div class="live-status-bar">
+        <div class="container stats-container">
+            <div>
+                <span class="status-number" id="stats-registered">...</span>
+                <span class="status-label">Registered Members</span>
+            </div>
+            <div>
+                <span class="status-number" id="stats-community">...</span>
+                <span class="status-label">Joined WhatsApp & Accessed Tools</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registerModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button class="close-modal" onclick="closeRegisterModal()">&times;</button>
+            <h2 class="modal-title">Register Now</h2>
+            <p class="modal-subtitle">Join the workshop and get access to the WhatsApp community & bonus tools.</p>
+            <form id="registerForm" class="register-form">
+                <div class="form-group">
+                    <label for="regName">Name</label>
+                    <input type="text" id="regName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email id">
+                </div>
+                <div class="form-group">
+                    <label for="regPhone">Phone Number</label>
+                    <input type="tel" id="regPhone" required placeholder="Enter your phone number">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-large mt-4">Submit Registration</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
