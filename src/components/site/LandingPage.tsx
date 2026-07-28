@@ -138,8 +138,6 @@ export function LandingPage({ workshop }: LandingPageProps) {
         isOpen={registerModal.isOpen}
         onClose={registerModal.close}
         workshopId={workshop._id}
-        workshopTitle={workshop.title}
-        workshopDate={workshop.date}
         workshopPrice={workshop.price}
       />
     </PublicLayout>

@@ -30,6 +30,7 @@ export async function buildRegistrationsWorkbook(registrations: RegistrationDocu
     { header: "Age", key: "age", width: 8 },
     { header: "Gender", key: "gender", width: 18 },
     { header: "City", key: "city", width: 18 },
+    { header: "Preferred Language", key: "preferredLanguage", width: 18 },
     { header: "Registration Status", key: "status", width: 20 },
     { header: "Registration Date", key: "createdAt", width: 20 },
   ];
@@ -44,6 +45,7 @@ export async function buildRegistrationsWorkbook(registrations: RegistrationDocu
       age: registration.age,
       gender: GENDER_LABELS[registration.gender] ?? registration.gender,
       city: registration.city,
+      preferredLanguage: registration.preferredLanguage,
       status: STATUS_LABELS[registration.status] ?? registration.status,
       createdAt: new Date(registration.createdAt).toLocaleString("en-IN"),
     });

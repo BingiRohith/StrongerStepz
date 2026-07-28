@@ -5,12 +5,15 @@ import { cn } from "@/utils/cn";
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  helperText?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, ...props }, ref) => {
+  ({ className, label, error, helperText, id, ...props }, ref) => {
     const generatedId = useId();
     const inputId = id ?? generatedId;
+    const helperId = `${inputId}-helper`;
+    const errorId = `${inputId}-error`;
 
     return (
       <div className="text-left">
@@ -28,13 +31,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${inputId}-error` : undefined}
+          aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
-        {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-600">
+        {error ? (
+          <p id={errorId} className="mt-1.5 text-sm text-red-600">
             {error}
           </p>
+        ) : (
+          helperText && (
+            <p id={helperId} className="mt-1.5 text-sm text-ink-muted">
+              {helperText}
+            </p>
+          )
         )}
       </div>
     );

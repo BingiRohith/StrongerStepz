@@ -3,6 +3,7 @@ import { z } from "zod";
 export const registrationStatusSchema = z.enum(["pending_payment", "confirmed", "cancelled"]);
 export const registrationPaymentStatusSchema = z.enum(["n/a", "pending", "paid", "failed", "cancelled", "refunded"]);
 export const registrationGenderSchema = z.enum(["male", "female", "other", "prefer_not_to_say"]);
+export const registrationPreferredLanguageSchema = z.enum(["Telugu", "Hindi", "English", "Others"]);
 
 const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "must be a valid workshop id");
 
@@ -18,6 +19,7 @@ export const createRegistrationSchema = z.object({
   age: z.coerce.number().int().min(1, "Enter a valid age").max(120, "Enter a valid age"),
   gender: registrationGenderSchema,
   city: z.string().min(1, "City is required"),
+  preferredLanguage: registrationPreferredLanguageSchema,
   source: z.string().optional(),
 });
 
