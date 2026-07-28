@@ -3,6 +3,7 @@ import { Schema, model, models, type Model, type Types } from "mongoose";
 export type RegistrationStatus = "pending_payment" | "confirmed" | "cancelled";
 export type RegistrationPaymentStatus = "n/a" | "pending" | "paid" | "failed" | "cancelled" | "refunded";
 export type RegistrationGender = "male" | "female" | "other" | "prefer_not_to_say";
+export type RegistrationPreferredLanguage = "Telugu" | "Hindi" | "English" | "Others";
 
 export interface RegistrationDocument {
   _id: Types.ObjectId;
@@ -14,6 +15,7 @@ export interface RegistrationDocument {
   age: number;
   gender: RegistrationGender;
   city: string;
+  preferredLanguage: RegistrationPreferredLanguage;
   status: RegistrationStatus;
   joinedCommunity: boolean;
   paymentStatus: RegistrationPaymentStatus;
@@ -32,6 +34,7 @@ const registrationSchema = new Schema<RegistrationDocument>(
     age: { type: Number, required: true },
     gender: { type: String, enum: ["male", "female", "other", "prefer_not_to_say"], required: true },
     city: { type: String, required: true, trim: true },
+    preferredLanguage: { type: String, enum: ["Telugu", "Hindi", "English", "Others"], required: true },
     status: {
       type: String,
       enum: ["pending_payment", "confirmed", "cancelled"],

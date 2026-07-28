@@ -84,6 +84,7 @@ export class RegistrationService {
       age: input.age,
       gender: input.gender,
       city: input.city,
+      preferredLanguage: input.preferredLanguage,
       source: input.source ?? "landing-page",
     });
   }

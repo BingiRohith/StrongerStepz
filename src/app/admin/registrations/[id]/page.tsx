@@ -97,6 +97,7 @@ export default async function RegistrationDetailPage({ params }: { params: Promi
           <Field label="Age" value={String(registration.age)} />
           <Field label="Gender" value={GENDER_LABELS[registration.gender] ?? registration.gender} />
           <Field label="City" value={registration.city} />
+          <Field label="Preferred Language" value={registration.preferredLanguage} />
           <Field label="Joined WhatsApp Community" value={registration.joinedCommunity ? "Yes" : "No"} />
           <Field label="Registered On" value={new Date(registration.createdAt).toLocaleString("en-IN")} />
         </div>
