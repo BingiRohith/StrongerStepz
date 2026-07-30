@@ -7,6 +7,12 @@ export type { ChallengeSectionProps } from "./ChallengeSection";
 export { AboutSection } from "./AboutSection";
 export type { AboutSectionProps } from "./AboutSection";
 
+export { TestimonialsSection } from "./TestimonialsSection";
+export type { TestimonialsSectionProps, TestimonialViewModel } from "./TestimonialsSection";
+
+export { DoctorsSection } from "./DoctorsSection";
+export type { DoctorsSectionProps, DoctorViewModel } from "./DoctorsSection";
+
 export { BenefitsSection } from "./BenefitsSection";
 export type { BenefitsSectionProps } from "./BenefitsSection";
 

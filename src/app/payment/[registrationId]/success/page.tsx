@@ -3,6 +3,7 @@ import { PaymentService } from "@/services/PaymentService";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatWorkshopDate } from "@/utils/formatWorkshopDate";
+import { ContinueToQuestionnaire } from "./ContinueToQuestionnaire";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,8 @@ export default async function PaymentSuccessPage({ params }: { params: Promise<P
         ) : (
           <p className="text-sm text-ink-muted">Your WhatsApp community link will be shared separately.</p>
         )}
+
+        <ContinueToQuestionnaire registrationId={registrationId} />
       </Card>
     </main>
   );

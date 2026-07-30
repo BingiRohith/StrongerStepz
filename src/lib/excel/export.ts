@@ -25,7 +25,7 @@ export async function buildRegistrationsWorkbook(registrations: RegistrationDocu
   sheet.columns = [
     { header: "Registration Number", key: "registrationNumber", width: 20 },
     { header: "Name", key: "name", width: 24 },
-    { header: "Mobile Number", key: "phone", width: 16 },
+    { header: "WhatsApp Number", key: "phone", width: 16 },
     { header: "Email", key: "email", width: 28 },
     { header: "Age", key: "age", width: 8 },
     { header: "Gender", key: "gender", width: 18 },

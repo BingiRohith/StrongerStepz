@@ -21,7 +21,7 @@ export interface WorkshopDocument {
   title: string;
   subtitle: string;
   description: string;
-  bannerImage: string;
+  bannerImage?: string;
   date: Date;
   time: string;
   duration: string;
@@ -29,6 +29,7 @@ export interface WorkshopDocument {
   originalPrice?: number;
   doctors: WorkshopDoctor[];
   benefits: string[];
+  passIncludes: string[];
   agenda: WorkshopAgendaItem[];
   faq: WorkshopFaqItem[];
   zoomLink?: string;
@@ -68,7 +69,9 @@ const workshopSchema = new Schema<WorkshopDocument>(
     title: { type: String, required: true, trim: true },
     subtitle: { type: String, required: true, trim: true },
     description: { type: String, required: true },
-    bannerImage: { type: String, required: true },
+    // No longer required — the homepage hero image now comes from the Settings-backed
+    // "homepageImages" config (see HomepageImagesService), not from the active workshop.
+    bannerImage: { type: String },
     date: { type: Date, required: true },
     time: { type: String, required: true },
     duration: { type: String, required: true },
@@ -76,6 +79,7 @@ const workshopSchema = new Schema<WorkshopDocument>(
     originalPrice: { type: Number },
     doctors: { type: [doctorSchema], default: [] },
     benefits: { type: [String], default: [] },
+    passIncludes: { type: [String], default: [] },
     agenda: { type: [agendaItemSchema], default: [] },
     faq: { type: [faqItemSchema], default: [] },
     zoomLink: { type: String },

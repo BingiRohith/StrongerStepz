@@ -10,6 +10,7 @@ const UPLOAD_FOLDERS = {
   testimonials: { cloudinaryFolder: "strongersteps/testimonials", resourceType: "image" as UploadResourceType },
   doctors: { cloudinaryFolder: "strongersteps/doctors", resourceType: "image" as UploadResourceType },
   pdfs: { cloudinaryFolder: "strongersteps/pdfs", resourceType: "raw" as UploadResourceType },
+  homepage: { cloudinaryFolder: "strongersteps/homepage", resourceType: "image" as UploadResourceType },
 } as const satisfies Record<string, { cloudinaryFolder: string; resourceType: UploadResourceType }>;
 
 type UploadFolder = keyof typeof UPLOAD_FOLDERS;

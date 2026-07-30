@@ -6,7 +6,7 @@ import { Loader } from "@/components/ui/Loader";
 import { cn } from "@/utils/cn";
 
 /** Matches the fixed allow-list `/api/uploads` accepts — see `src/app/api/uploads/route.ts`. */
-export type UploadFieldFolder = "testimonials" | "doctors" | "pdfs";
+export type UploadFieldFolder = "testimonials" | "doctors" | "pdfs" | "homepage";
 
 export interface UploadFieldValue {
   url: string;
@@ -30,6 +30,7 @@ const DEFAULT_ACCEPT: Record<UploadFieldFolder, string> = {
   testimonials: "image/jpeg,image/png,image/webp",
   doctors: "image/jpeg,image/png,image/webp",
   pdfs: "application/pdf",
+  homepage: "image/jpeg,image/png,image/webp",
 };
 
 function isImageAccept(accept: string): boolean {
@@ -82,7 +83,8 @@ function uploadWithProgress(
  * `/api/uploads`. Returns `{url, publicId}` to the parent form on success —
  * the parent stores those two strings on the entity, same as every other
  * `photoUrl`/`photoPublicId` field pair. Used by Testimonials, Doctors
- * (photo) and PDF Management (file); the folder implies image vs. PDF.
+ * (photo), PDF Management (file), and Homepage Images; the folder implies
+ * image vs. PDF.
  */
 export function UploadField({
   label,

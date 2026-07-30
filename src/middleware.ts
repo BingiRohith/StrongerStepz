@@ -7,9 +7,11 @@ import { getSessionCookieName } from "@/lib/auth/session";
  * A handful of API paths must stay reachable without a session even though
  * their prefix is otherwise admin-only: the public site's "active workshop"
  * and "workshop by slug" reads, the public registration form's POST, the
- * public "active" reads for testimonials/doctors/pdfs/feedback-forms, and
- * the public questionnaire/feedback submission POSTs. `/api/uploads` gets
- * no exception — admin-only, always.
+ * public "active" reads for testimonials/doctors/pdfs/feedback-forms, the
+ * public "feedback form by id" read (only returns published forms — see
+ * `FeedbackFormService.getPublicById`), and the public
+ * questionnaire/feedback submission POSTs. `/api/uploads` gets no
+ * exception — admin-only, always.
  */
 const PUBLIC_API_EXCEPTIONS: Array<{ pattern: RegExp; methods: string[] }> = [
   { pattern: /^\/api\/workshops\/active$/, methods: ["GET"] },
@@ -18,7 +20,9 @@ const PUBLIC_API_EXCEPTIONS: Array<{ pattern: RegExp; methods: string[] }> = [
   { pattern: /^\/api\/testimonials\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/doctors\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/pdfs\/active$/, methods: ["GET"] },
+  { pattern: /^\/api\/pdfs\/[^/]+\/download$/, methods: ["GET"] },
   { pattern: /^\/api\/feedback-forms\/active$/, methods: ["GET"] },
+  { pattern: /^\/api\/feedback-forms\/public\/[^/]+$/, methods: ["GET"] },
   { pattern: /^\/api\/questionnaire-responses$/, methods: ["POST"] },
   { pattern: /^\/api\/feedback-responses$/, methods: ["POST"] },
 ];
@@ -59,7 +63,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/pdfs") ||
     pathname.startsWith("/api/questionnaire-responses") ||
     pathname.startsWith("/api/feedback-forms") ||
-    pathname.startsWith("/api/feedback-responses");
+    pathname.startsWith("/api/feedback-responses") ||
+    pathname.startsWith("/api/homepage-images") ||
+    pathname.startsWith("/api/audience-content");
 
   if (!requiresAuth) {
     return NextResponse.next();
@@ -91,5 +97,7 @@ export const config = {
     "/api/questionnaire-responses/:path*",
     "/api/feedback-forms/:path*",
     "/api/feedback-responses/:path*",
+    "/api/homepage-images/:path*",
+    "/api/audience-content/:path*",
   ],
 };

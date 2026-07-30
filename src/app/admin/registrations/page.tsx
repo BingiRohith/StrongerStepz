@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { Pagination } from "@/components/ui/Pagination";
 import { Loader } from "@/components/ui/Loader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Dialog } from "@/components/ui/Dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import type { RegistrationDocument } from "@/models/Registration";
 
@@ -64,6 +65,8 @@ export default function AdminRegistrationsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function loadData() {
     setLoading(true);
@@ -97,6 +100,23 @@ export default function AdminRegistrationsPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  async function handleDelete() {
+    if (!pendingDeleteId) return;
+    setActionError(null);
+    try {
+      const response = await fetch(`/api/registrations/${pendingDeleteId}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok || !body.success) {
+        setActionError(body.error?.message ?? "Failed to delete registration.");
+        return;
+      }
+      setPendingDeleteId(null);
+      await loadData();
+    } catch {
+      setActionError("Something went wrong. Please try again.");
+    }
+  }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -171,6 +191,12 @@ export default function AdminRegistrationsPage() {
         </a>
       </div>
 
+      {actionError && (
+        <p role="alert" className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {actionError}
+        </p>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader />
@@ -186,11 +212,12 @@ export default function AdminRegistrationsPage() {
               <TableRow>
                 <TableHead>Reg. Number</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Mobile</TableHead>
+                <TableHead>WhatsApp Number</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Age</TableHead>
                 <TableHead>Gender</TableHead>
                 <TableHead>City</TableHead>
+                <TableHead>Preferred Language</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
                 <TableHead>Date</TableHead>
@@ -207,6 +234,7 @@ export default function AdminRegistrationsPage() {
                   <TableCell>{registration.age}</TableCell>
                   <TableCell>{GENDER_LABELS[registration.gender] ?? registration.gender}</TableCell>
                   <TableCell>{registration.city}</TableCell>
+                  <TableCell>{registration.preferredLanguage}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="normal-case">
                       {STATUS_LABELS[registration.status] ?? registration.status}
@@ -219,11 +247,16 @@ export default function AdminRegistrationsPage() {
                   </TableCell>
                   <TableCell>{new Date(registration.createdAt).toLocaleDateString("en-IN")}</TableCell>
                   <TableCell>
-                    <Link href={`/admin/registrations/${registration._id}`}>
-                      <Button variant="ghost" size="sm">
-                        View
+                    <div className="flex flex-wrap gap-2">
+                      <Link href={`/admin/registrations/${registration._id}`}>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
+                      </Link>
+                      <Button variant="ghost" size="sm" onClick={() => setPendingDeleteId(registration._id)}>
+                        Delete
                       </Button>
-                    </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -234,6 +267,23 @@ export default function AdminRegistrationsPage() {
           </div>
         </>
       )}
+
+      <Dialog
+        isOpen={pendingDeleteId !== null}
+        onClose={() => setPendingDeleteId(null)}
+        title="Delete this registration?"
+        description="This can't be undone. Registrations with an associated payment, questionnaire response, or feedback response can't be deleted."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </>
+        }
+      />
     </AdminLayout>
   );
 }

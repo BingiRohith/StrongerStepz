@@ -27,6 +27,12 @@ export default function AdminFeedbackFormsPage() {
   const [page, setPage] = useState(1);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   async function loadForms() {
     setLoading(true);
@@ -72,6 +78,21 @@ export default function AdminFeedbackFormsPage() {
       await loadForms();
     } catch {
       setActionError("Something went wrong. Please try again.");
+    }
+  }
+
+  function getPublicLink(form: FeedbackFormRow) {
+    return `${origin}/feedback/${form._id}`;
+  }
+
+  async function handleCopyLink(form: FeedbackFormRow) {
+    setActionError(null);
+    try {
+      await navigator.clipboard.writeText(getPublicLink(form));
+      setCopiedId(form._id);
+      setTimeout(() => setCopiedId((current) => (current === form._id ? null : current)), 2000);
+    } catch {
+      setActionError("Couldn't copy the link. Please copy it manually.");
     }
   }
 
@@ -134,6 +155,7 @@ export default function AdminFeedbackFormsPage() {
                 <TableHead>Title</TableHead>
                 <TableHead>Fields</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Public Link</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -149,6 +171,23 @@ export default function AdminFeedbackFormsPage() {
                     <Badge variant={form.isActive ? "primary" : "outline"} className="normal-case">
                       {form.isActive ? "Active" : "Inactive"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {form.isActive ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="max-w-[220px] truncate rounded-lg bg-surface-light px-2 py-1 font-mono text-xs text-ink-muted" title={getPublicLink(form)}>
+                          {getPublicLink(form)}
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={() => handleCopyLink(form)}>
+                          {copiedId === form._id ? "Copied!" : "Copy Link"}
+                        </Button>
+                        <Button variant="ghost" size="sm" href={getPublicLink(form)} target="_blank" rel="noopener noreferrer">
+                          Open
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-ink-muted">Publish to get a public link</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
