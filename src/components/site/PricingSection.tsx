@@ -36,7 +36,7 @@ export function PricingSection({
     title: planTitle = "Workshop Registration",
     price,
     originalPrice,
-    includes,
+    includes = [],
     ctaLabel = "Join the Workshop",
     secureText = "🔒 Secure Checkout",
   } = plan;
@@ -67,19 +67,21 @@ export function PricingSection({
             )}
             {price === 0 ? "Giving for Free" : formatInr(price)}
           </div>
-          <div className="mb-8 rounded-2xl bg-surface-light p-6 text-left">
-            <p className="mb-4 font-heading text-base font-bold">Your pass includes:</p>
-            <ul className="flex flex-col gap-2">
-              {includes.map((item) => (
-                <li key={item} className="flex items-center gap-3 font-medium text-ink-muted">
-                  <span aria-hidden="true" className="font-bold text-secondary">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {includes.length > 0 && (
+            <div className="mb-8 rounded-2xl bg-surface-light p-6 text-left">
+              <p className="mb-4 font-heading text-base font-bold">Your pass includes:</p>
+              <ul className="flex flex-col gap-2">
+                {includes.map((item) => (
+                  <li key={item} className="flex items-center gap-3 font-medium text-ink-muted">
+                    <span aria-hidden="true" className="font-bold text-secondary">
+                      ✓
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <Button size="lg" className="w-full" onClick={onRegisterClick}>
             {ctaLabel}
           </Button>

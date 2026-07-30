@@ -57,6 +57,7 @@ async function seedWorkshop(): Promise<void> {
       "Simple exercises that trigger Wolf's Law for stronger bones",
       "Daily habits that help protect against osteoporosis and fractures",
     ],
+    passIncludes: ["Live Zoom workshop access", "Session recording", "Bonus exercise guide PDF"],
     agenda: [
       { icon: "💻", text: "Live guided Zoom session" },
       { icon: "💬", text: "Interactive discussion" },

@@ -31,6 +31,12 @@ export class QuestionnaireResponseService {
       throw new NotFoundError(`Registration "${input.registrationId}" not found`);
     }
 
+    // Blocks a paid registrant from submitting before payment is verified —
+    // free registrations are confirmed immediately at registration time.
+    if (registration.status !== "confirmed") {
+      throw new ConflictError("This registration is not confirmed yet. Please complete payment first.");
+    }
+
     const existing = await this.repository.findByRegistrationId(input.registrationId);
     if (existing) {
       throw new ConflictError("This registration has already submitted the questionnaire");

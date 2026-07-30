@@ -41,6 +41,7 @@ interface ApiEnvelope<T> {
 }
 
 interface PdfDocumentView {
+  _id: string;
   title: string;
   fileUrl: string;
 }
@@ -147,9 +148,8 @@ export default function QuestionnairePage() {
       if (activePdf?.fileUrl) {
         setPdf(activePdf);
         const link = document.createElement("a");
-        link.href = activePdf.fileUrl;
+        link.href = `/api/pdfs/${activePdf._id}/download`;
         link.download = activePdf.title || "workshop-guide.pdf";
-        link.target = "_blank";
         link.rel = "noopener";
         document.body.appendChild(link);
         link.click();
@@ -223,7 +223,7 @@ export default function QuestionnairePage() {
                 <p className="mb-4 text-sm text-ink-muted">
                   Your workshop guide download should begin automatically. If it doesn&apos;t, use the button below.
                 </p>
-                <a href={pdf.fileUrl} target="_blank" rel="noopener noreferrer" download={pdf.title}>
+                <a href={`/api/pdfs/${pdf._id}/download`} rel="noopener noreferrer" download={pdf.title}>
                   <Button size="lg" className="w-full">
                     Download {pdf.title}
                   </Button>

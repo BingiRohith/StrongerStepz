@@ -1,6 +1,9 @@
 import { Types } from "mongoose";
 import { RegistrationRepository } from "@/repositories/RegistrationRepository";
 import { WorkshopRepository } from "@/repositories/WorkshopRepository";
+import { PaymentRepository } from "@/repositories/PaymentRepository";
+import { QuestionnaireResponseRepository } from "@/repositories/QuestionnaireResponseRepository";
+import { FeedbackResponseRepository } from "@/repositories/FeedbackResponseRepository";
 import { RegistrationNumberGenerator } from "@/services/RegistrationNumberGenerator";
 import type { RegistrationDocument } from "@/models/Registration";
 import { NotFoundError } from "@/errors/NotFoundError";
@@ -22,7 +25,10 @@ export class RegistrationService {
   constructor(
     protected readonly repository: RegistrationRepository = new RegistrationRepository(),
     protected readonly workshopRepository: WorkshopRepository = new WorkshopRepository(),
-    protected readonly numberGenerator: RegistrationNumberGenerator = new RegistrationNumberGenerator()
+    protected readonly numberGenerator: RegistrationNumberGenerator = new RegistrationNumberGenerator(),
+    protected readonly paymentRepository: PaymentRepository = new PaymentRepository(),
+    protected readonly questionnaireResponseRepository: QuestionnaireResponseRepository = new QuestionnaireResponseRepository(),
+    protected readonly feedbackResponseRepository: FeedbackResponseRepository = new FeedbackResponseRepository()
   ) {}
 
   async list(query: ListRegistrationsQuery = {}): Promise<RegistrationDocument[]> {
@@ -75,6 +81,9 @@ export class RegistrationService {
 
     const registrationNumber = await this.numberGenerator.generate();
 
+    // Free workshops have no payment step, so the registration is confirmed
+    // immediately ("₹0 payment / automatic success"); paid workshops stay
+    // "pending_payment" until PaymentService marks them paid.
     return this.repository.create({
       workshopId: workshop._id,
       registrationNumber,
@@ -86,6 +95,31 @@ export class RegistrationService {
       city: input.city,
       preferredLanguage: input.preferredLanguage,
       source: input.source ?? "landing-page",
+      status: workshop.price > 0 ? "pending_payment" : "confirmed",
     });
+  }
+
+  /** Blocks deletion (rather than cascading) whenever a Payment, QuestionnaireResponse, or FeedbackResponse still references this registration. */
+  async delete(id: string): Promise<void> {
+    await this.getById(id);
+
+    const [paymentCount, questionnaireResponse, feedbackResponseCount] = await Promise.all([
+      this.paymentRepository.count({ registrationId: new Types.ObjectId(id) }),
+      this.questionnaireResponseRepository.findByRegistrationId(id),
+      this.feedbackResponseRepository.count({ registrationId: new Types.ObjectId(id) }),
+    ]);
+
+    const blockers: string[] = [];
+    if (paymentCount > 0) blockers.push("payment record");
+    if (questionnaireResponse) blockers.push("questionnaire response");
+    if (feedbackResponseCount > 0) blockers.push("feedback response");
+
+    if (blockers.length > 0) {
+      throw new ConflictError(
+        `Cannot delete this registration because it has an associated ${blockers.join(", ")}. Remove those records first.`
+      );
+    }
+
+    await this.repository.deleteById(id);
   }
 }

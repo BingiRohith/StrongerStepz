@@ -28,6 +28,20 @@ export class FeedbackFormService {
     return form;
   }
 
+  /**
+   * Backs the public `/feedback/[formId]` page and its API read. Unlike
+   * `getById` (admin-only), this 404s on an unpublished form too — a
+   * disabled form's public link must stop working the moment it's
+   * disabled, not just stop being listed.
+   */
+  async getPublicById(id: string): Promise<FeedbackFormDocument> {
+    const form = await this.repository.findById(id);
+    if (!form || !form.isActive) {
+      throw new NotFoundError(`Feedback form "${id}" not found`);
+    }
+    return form;
+  }
+
   async create(input: CreateFeedbackFormInput): Promise<FeedbackFormDocument> {
     return this.repository.create(input);
   }

@@ -92,7 +92,7 @@ export default async function RegistrationDetailPage({ params }: { params: Promi
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Full Name" value={registration.name} />
-          <Field label="Mobile Number" value={registration.phone} />
+          <Field label="WhatsApp Number" value={registration.phone} />
           <Field label="Email" value={registration.email} />
           <Field label="Age" value={String(registration.age)} />
           <Field label="Gender" value={GENDER_LABELS[registration.gender] ?? registration.gender} />

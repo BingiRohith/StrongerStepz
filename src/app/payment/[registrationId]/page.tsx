@@ -27,9 +27,18 @@ interface RazorpayCheckoutOptions {
   modal?: { ondismiss?: () => void };
 }
 
+interface RazorpayFailureError {
+  code?: string;
+  description?: string;
+  source?: string;
+  step?: string;
+  reason?: string;
+  metadata?: { order_id?: string; payment_id?: string };
+}
+
 interface RazorpayCheckoutInstance {
   open: () => void;
-  on: (event: "payment.failed", handler: (response: { error?: { description?: string } }) => void) => void;
+  on: (event: "payment.failed", handler: (response: { error?: RazorpayFailureError }) => void) => void;
 }
 
 declare global {
@@ -175,7 +184,9 @@ export default function PaymentPage() {
       },
     });
 
-    checkout.on("payment.failed", () => {
+    checkout.on("payment.failed", (response) => {
+      // eslint-disable-next-line no-console -- surfacing the real gateway error instead of the generic modal message
+      console.error("Razorpay payment.failed", response.error);
       setPaying(false);
       void reportOutcome("failed");
       router.push(`/payment/failed?registrationId=${registrationId}`);

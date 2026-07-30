@@ -7,13 +7,13 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { ReorderControls } from "@/components/admin/ReorderControls";
 import type { WorkshopStatus } from "@/models/Workshop";
 
 export interface WorkshopFormInitialValue {
   title?: string;
   subtitle?: string;
   description?: string;
-  bannerImage?: string;
   date?: string;
   time?: string;
   duration?: string;
@@ -21,6 +21,7 @@ export interface WorkshopFormInitialValue {
   originalPrice?: number;
   doctors?: { name: string }[];
   benefits?: string[];
+  passIncludes?: string[];
   agenda?: { icon: string; text: string }[];
   faq?: { question: string; answer: string }[];
   zoomLink?: string;
@@ -45,7 +46,6 @@ interface FormState {
   title: string;
   subtitle: string;
   description: string;
-  bannerImage: string;
   date: string;
   time: string;
   duration: string;
@@ -53,6 +53,7 @@ interface FormState {
   originalPrice: string;
   doctors: { name: string }[];
   benefits: string[];
+  passIncludes: string[];
   agenda: { icon: string; text: string }[];
   faq: { question: string; answer: string }[];
   zoomLink: string;
@@ -79,7 +80,6 @@ function buildInitialState(initialValue?: WorkshopFormInitialValue): FormState {
     title: initialValue?.title ?? "",
     subtitle: initialValue?.subtitle ?? "",
     description: initialValue?.description ?? "",
-    bannerImage: initialValue?.bannerImage ?? "",
     date: toDateInputValue(initialValue?.date),
     time: initialValue?.time ?? "",
     duration: initialValue?.duration ?? "",
@@ -87,6 +87,7 @@ function buildInitialState(initialValue?: WorkshopFormInitialValue): FormState {
     originalPrice: initialValue?.originalPrice !== undefined ? String(initialValue.originalPrice) : "",
     doctors: initialValue?.doctors?.length ? initialValue.doctors : [{ name: "" }],
     benefits: initialValue?.benefits?.length ? initialValue.benefits : [""],
+    passIncludes: initialValue?.passIncludes?.length ? initialValue.passIncludes : [""],
     agenda: initialValue?.agenda?.length ? initialValue.agenda : [{ icon: "", text: "" }],
     faq: initialValue?.faq?.length ? initialValue.faq : [{ question: "", answer: "" }],
     zoomLink: initialValue?.zoomLink ?? "",
@@ -100,6 +101,16 @@ function buildInitialState(initialValue?: WorkshopFormInitialValue): FormState {
     seoDescription: initialValue?.seoDescription ?? "",
     slug: initialValue?.slug ?? "",
   };
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1): T[] {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= items.length) return items;
+  const next = [...items];
+  const [moved] = next.splice(index, 1);
+  if (moved === undefined) return items;
+  next.splice(targetIndex, 0, moved);
+  return next;
 }
 
 const statusOptions = [
@@ -130,7 +141,6 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
       title: form.title,
       subtitle: form.subtitle,
       description: form.description,
-      bannerImage: form.bannerImage,
       date: form.date,
       time: form.time,
       duration: form.duration,
@@ -138,6 +148,7 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
       originalPrice: form.originalPrice === "" ? undefined : Number(form.originalPrice),
       doctors: form.doctors.filter((doctor) => doctor.name.trim() !== ""),
       benefits: form.benefits.map((b) => b.trim()).filter(Boolean),
+      passIncludes: form.passIncludes.map((p) => p.trim()).filter(Boolean),
       agenda: form.agenda.filter((item) => item.text.trim() !== ""),
       faq: form.faq.filter((item) => item.question.trim() !== "" && item.answer.trim() !== ""),
       zoomLink: form.zoomLink,
@@ -201,7 +212,6 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
         <div className="md:col-span-2">
           <Textarea label="Description" required rows={5} value={form.description} onChange={(e) => update("description", e.target.value)} error={fieldErrors.description} />
         </div>
-        <Input label="Banner Image Path" required value={form.bannerImage} onChange={(e) => update("bannerImage", e.target.value)} error={fieldErrors.bannerImage} placeholder="/assets/images/hero.png" />
         <Input label="Date" type="date" required value={form.date} onChange={(e) => update("date", e.target.value)} error={fieldErrors.date} />
         <Input label="Time" required value={form.time} onChange={(e) => update("time", e.target.value)} error={fieldErrors.time} placeholder="9 AM - 1 PM" />
         <Input label="Duration" required value={form.duration} onChange={(e) => update("duration", e.target.value)} error={fieldErrors.duration} placeholder="4 hours" />
@@ -263,6 +273,35 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
         </div>
         <Button type="button" variant="secondary" size="sm" className="mt-4" onClick={() => update("benefits", [...form.benefits, ""])}>
           + Add Benefit
+        </Button>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="mb-4 font-heading text-lg text-primary-dark">Pass Includes</h3>
+        <p className="mb-4 text-sm text-ink-muted">Shown as the checklist under &ldquo;Your pass includes&rdquo; on the registration card. Leave empty to hide that box.</p>
+        <div className="flex flex-col gap-3">
+          {form.passIncludes.map((item, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <ReorderControls
+                canMoveUp={index > 0}
+                canMoveDown={index < form.passIncludes.length - 1}
+                onMoveUp={() => update("passIncludes", moveItem(form.passIncludes, index, -1))}
+                onMoveDown={() => update("passIncludes", moveItem(form.passIncludes, index, 1))}
+              />
+              <Input
+                className="flex-1"
+                placeholder="Live workshop access"
+                value={item}
+                onChange={(e) => update("passIncludes", form.passIncludes.map((p, i) => (i === index ? e.target.value : p)))}
+              />
+              <Button type="button" variant="ghost" size="sm" onClick={() => update("passIncludes", form.passIncludes.filter((_, i) => i !== index))}>
+                Remove
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button type="button" variant="secondary" size="sm" className="mt-4" onClick={() => update("passIncludes", [...form.passIncludes, ""])}>
+          + Add Item
         </Button>
       </Card>
 

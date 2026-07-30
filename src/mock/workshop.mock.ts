@@ -1,40 +1,19 @@
 /**
  * Site-wide landing-page content that ISN'T part of a specific Workshop
- * document — the problem/challenge callout, the audience & comparison
- * section, the closing CTA, the footer, and the (still-mocked) live stats
- * bar. Workshop-specific content (hero copy, doctors, benefits, agenda,
- * FAQ, pricing) comes from MongoDB via `WorkshopService.getActive()` as of
- * Phase 5 — see `src/app/page.tsx`.
+ * document — the comparison section, the closing CTA, the footer, and the
+ * (still-mocked) live stats bar. Workshop-specific content (hero copy,
+ * benefits, agenda, FAQ, pricing) comes from MongoDB via
+ * `WorkshopService.getActive()` as of Phase 5 — see `src/app/page.tsx`.
+ * Testimonials and doctors come from the `Testimonial`/`Doctor` collections
+ * as of Phase 7 — see `src/components/site/TestimonialsSection.tsx` /
+ * `DoctorsSection.tsx`. As of Phase 8, the hero/benefits/audience image
+ * URLs come from `HomepageImagesService` instead of this file or Workshop.
+ * The "Is This For Me?" title + statements come from `AudienceContentService`.
  */
-import type { ChallengeItem, ComparisonColumn, WorkshopStats } from "@/types/workshop";
+import type { ComparisonColumn, WorkshopStats } from "@/types/workshop";
 
 export const siteContent = {
   contactEmail: "strongersteps50@gmail.com",
-};
-
-export const challengeContent = {
-  title: "What you missed ?",
-  subtitle: "It happens slowly, but you are not alone in this journey.",
-  items: [
-    { icon: "🦵", title: "Climbing Stairs", description: "Starts feeling harder and requires more breath than it used to." },
-    { icon: "🚶", title: "Walking Long Distances", description: "Feels tiring and requires more frequent rests along the way." },
-    { icon: "⚖️", title: "Balance", description: "Feels uncertain at times, leading to an increasing fear of falls." },
-    { icon: "🛡️", title: "Confidence", description: "Trust in movement slowly reduces, impacting daily activities." },
-  ] satisfies ChallengeItem[],
-  stopIntro: "Over time, many people silently stop:",
-  stopList: ["Walking outside alone", "Social activities and gatherings", "Travelling confidently", "Trusting their own body"],
-};
-
-export const audienceContent = {
-  title: "Who is this for?",
-  tags: [
-    "Adults above 50",
-    "Low confidence in movement",
-    "Afraid of weakness or falls",
-    "Families wanting elders to stay active",
-  ],
-  imageSrc: "/assets/images/community.png",
-  imageAlt: "Group of smiling older adults in a support circle",
 };
 
 export const comparison: { traditional: ComparisonColumn; strongerSteps: ComparisonColumn } = {

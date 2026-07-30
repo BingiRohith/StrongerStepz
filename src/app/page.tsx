@@ -1,8 +1,23 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { LandingPage, type WorkshopViewModel } from "@/components/site/LandingPage";
+import type { TestimonialViewModel } from "@/components/site/TestimonialsSection";
+import type { DoctorViewModel } from "@/components/site/DoctorsSection";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { WorkshopService } from "@/services/WorkshopService";
+import { TestimonialService } from "@/services/TestimonialService";
+import { DoctorService } from "@/services/DoctorService";
+import { HomepageImagesService } from "@/services/HomepageImagesService";
+import { AudienceContentService } from "@/services/AudienceContentService";
+import type { HomepageImages } from "@/validators/homepageImages.schema";
+import type { AudienceContent } from "@/validators/audienceContent.schema";
+
+/** Falls back to the original static assets until an admin uploads a replacement for that slot. */
+const FALLBACK_HOMEPAGE_IMAGES = {
+  hero: "/assets/images/hero.png",
+  benefits: "/assets/images/studio.png",
+  audience: "/assets/images/community.png",
+};
 
 // This page now depends on live MongoDB data — force per-request rendering
 // instead of Next trying to prerender it (and hit the database) at build time.
@@ -26,6 +41,24 @@ const getActiveWorkshop = cache(async (): Promise<WorkshopViewModel | null> => {
   }
 });
 
+const getActiveTestimonials = cache(async (): Promise<TestimonialViewModel[]> => {
+  const testimonials = await new TestimonialService().getActiveOrdered();
+  return testimonials.map((testimonial) => ({ ...testimonial, _id: testimonial._id.toString() }));
+});
+
+const getActiveDoctors = cache(async (): Promise<DoctorViewModel[]> => {
+  const doctors = await new DoctorService().getActiveOrdered();
+  return doctors.map((doctor) => ({ ...doctor, _id: doctor._id.toString() }));
+});
+
+const getHomepageImages = cache(async (): Promise<HomepageImages> => {
+  return new HomepageImagesService().get();
+});
+
+const getAudienceContent = cache(async (): Promise<AudienceContent> => {
+  return new AudienceContentService().get();
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const workshop = await getActiveWorkshop();
   if (!workshop) {
@@ -40,15 +73,17 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const shared = { title: workshop.seoTitle, description: workshop.seoDescription };
+  const images = await getHomepageImages();
+  const heroImage = images.hero?.url ?? FALLBACK_HOMEPAGE_IMAGES.hero;
   return {
     ...shared,
     alternates: { canonical: "/" },
     openGraph: {
       ...shared,
       type: "website",
-      images: [{ url: workshop.bannerImage, width: 1200, height: 630, alt: workshop.title }],
+      images: [{ url: heroImage, width: 1200, height: 630, alt: workshop.title }],
     },
-    twitter: { card: "summary_large_image", ...shared, images: [workshop.bannerImage] },
+    twitter: { card: "summary_large_image", ...shared, images: [heroImage] },
   };
 }
 
@@ -64,5 +99,24 @@ export default async function Home() {
     );
   }
 
-  return <LandingPage workshop={workshop} />;
+  const [testimonials, doctors, homepageImages, audienceContent] = await Promise.all([
+    getActiveTestimonials(),
+    getActiveDoctors(),
+    getHomepageImages(),
+    getAudienceContent(),
+  ]);
+
+  return (
+    <LandingPage
+      workshop={workshop}
+      testimonials={testimonials}
+      doctors={doctors}
+      homepageImages={{
+        hero: homepageImages.hero?.url ?? FALLBACK_HOMEPAGE_IMAGES.hero,
+        benefits: homepageImages.benefits?.url ?? FALLBACK_HOMEPAGE_IMAGES.benefits,
+        audience: homepageImages.audience?.url ?? FALLBACK_HOMEPAGE_IMAGES.audience,
+      }}
+      audienceContent={audienceContent}
+    />
+  );
 }
