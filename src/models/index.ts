@@ -7,7 +7,7 @@ export type {
   WorkshopFaqItem,
 } from "@/models/Workshop";
 
-export { Registration } from "@/models/Registration";
+export { Registration, SUCCESSFUL_REGISTRATION_STATUSES } from "@/models/Registration";
 export type {
   RegistrationDocument,
   RegistrationStatus,
@@ -32,6 +32,9 @@ export type { TestimonialDocument } from "@/models/Testimonial";
 
 export { Doctor } from "@/models/Doctor";
 export type { DoctorDocument } from "@/models/Doctor";
+
+export { RealLifeStory } from "@/models/RealLifeStory";
+export type { RealLifeStoryDocument } from "@/models/RealLifeStory";
 
 export { PdfDocument } from "@/models/PdfDocument";
 export type { PdfDocumentDocument } from "@/models/PdfDocument";

@@ -3,14 +3,18 @@ import type { Metadata } from "next";
 import { LandingPage, type WorkshopViewModel } from "@/components/site/LandingPage";
 import type { TestimonialViewModel } from "@/components/site/TestimonialsSection";
 import type { DoctorViewModel } from "@/components/site/DoctorsSection";
+import type { RealLifeStoryViewModel } from "@/components/site/RealLifeStoriesSection";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { WorkshopService } from "@/services/WorkshopService";
+import { RegistrationService } from "@/services/RegistrationService";
 import { TestimonialService } from "@/services/TestimonialService";
 import { DoctorService } from "@/services/DoctorService";
+import { RealLifeStoryService } from "@/services/RealLifeStoryService";
 import { HomepageImagesService } from "@/services/HomepageImagesService";
 import { AudienceContentService } from "@/services/AudienceContentService";
 import type { HomepageImages } from "@/validators/homepageImages.schema";
 import type { AudienceContent } from "@/validators/audienceContent.schema";
+import type { RegistrationStats } from "@/services/RegistrationService";
 
 /** Falls back to the original static assets until an admin uploads a replacement for that slot. */
 const FALLBACK_HOMEPAGE_IMAGES = {
@@ -51,12 +55,31 @@ const getActiveDoctors = cache(async (): Promise<DoctorViewModel[]> => {
   return doctors.map((doctor) => ({ ...doctor, _id: doctor._id.toString() }));
 });
 
+const getActiveRealLifeStories = cache(async (): Promise<RealLifeStoryViewModel[]> => {
+  const stories = await new RealLifeStoryService().getActiveOrdered();
+  return stories.map((story) => ({ ...story, _id: story._id.toString() }));
+});
+
+/** Backs the "Limited Seats" CTA notice — hidden once the active workshop's registrationLimit is reached. */
+const getSeatsAvailable = cache(async (): Promise<boolean> => {
+  const workshop = await getActiveWorkshop();
+  if (!workshop) {
+    return false;
+  }
+  return new RegistrationService().hasAvailableSeats(workshop._id, workshop.registrationLimit);
+});
+
 const getHomepageImages = cache(async (): Promise<HomepageImages> => {
   return new HomepageImagesService().get();
 });
 
 const getAudienceContent = cache(async (): Promise<AudienceContent> => {
   return new AudienceContentService().get();
+});
+
+/** Backs the live stats bar — always a fresh DB read (page is `force-dynamic`), never stale. */
+const getStats = cache(async (): Promise<RegistrationStats> => {
+  return new RegistrationService().getStats();
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -99,18 +122,25 @@ export default async function Home() {
     );
   }
 
-  const [testimonials, doctors, homepageImages, audienceContent] = await Promise.all([
-    getActiveTestimonials(),
-    getActiveDoctors(),
-    getHomepageImages(),
-    getAudienceContent(),
-  ]);
+  const [testimonials, doctors, realLifeStories, homepageImages, audienceContent, seatsAvailable, stats] =
+    await Promise.all([
+      getActiveTestimonials(),
+      getActiveDoctors(),
+      getActiveRealLifeStories(),
+      getHomepageImages(),
+      getAudienceContent(),
+      getSeatsAvailable(),
+      getStats(),
+    ]);
 
   return (
     <LandingPage
       workshop={workshop}
       testimonials={testimonials}
       doctors={doctors}
+      realLifeStories={realLifeStories}
+      seatsAvailable={seatsAvailable}
+      stats={stats}
       homepageImages={{
         hero: homepageImages.hero?.url ?? FALLBACK_HOMEPAGE_IMAGES.hero,
         benefits: homepageImages.benefits?.url ?? FALLBACK_HOMEPAGE_IMAGES.benefits,

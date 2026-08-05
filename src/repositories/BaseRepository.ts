@@ -1,4 +1,4 @@
-import type { Model, QueryFilter, UpdateQuery } from "mongoose";
+import type { ClientSession, Model, QueryFilter, UpdateQuery } from "mongoose";
 import { connectToDatabase } from "@/lib/db/connect";
 import { ConflictError } from "@/errors/ConflictError";
 import { DatabaseError } from "@/errors/DatabaseError";
@@ -69,12 +69,23 @@ export abstract class BaseRepository<T extends { _id: unknown }> {
     }
   }
 
-  async deleteById(id: string): Promise<T | null> {
+  async deleteById(id: string, session?: ClientSession): Promise<T | null> {
     await connectToDatabase();
     try {
-      return await this.model.findByIdAndDelete(id).lean<T>().exec();
+      return await this.model.findByIdAndDelete(id, { session }).lean<T>().exec();
     } catch (error) {
       throw new DatabaseError("Failed to delete document", error);
+    }
+  }
+
+  /** Bulk delete by filter — used for cascading deletes (e.g. every Payment for a Registration). Optionally participates in a transaction via `session`. */
+  async deleteMany(filter: QueryFilter<T>, session?: ClientSession): Promise<number> {
+    await connectToDatabase();
+    try {
+      const result = await this.model.deleteMany(filter, { session }).exec();
+      return result.deletedCount ?? 0;
+    } catch (error) {
+      throw new DatabaseError("Failed to delete documents", error);
     }
   }
 

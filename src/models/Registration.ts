@@ -1,6 +1,14 @@
 import { Schema, model, models, type Model, type Types } from "mongoose";
 
 export type RegistrationStatus = "pending_payment" | "confirmed" | "cancelled";
+
+/**
+ * Which `RegistrationStatus` values count as a "successful registration" for
+ * public-facing stats (homepage counter) and similar aggregates. A single
+ * array here — extend it if a future status (e.g. "attended") should also
+ * count — instead of that logic being inlined wherever the count is read.
+ */
+export const SUCCESSFUL_REGISTRATION_STATUSES: RegistrationStatus[] = ["confirmed"];
 export type RegistrationPaymentStatus = "n/a" | "pending" | "paid" | "failed" | "cancelled" | "refunded";
 export type RegistrationGender = "male" | "female" | "other" | "prefer_not_to_say";
 export type RegistrationPreferredLanguage = "Telugu" | "Hindi" | "English" | "Others";

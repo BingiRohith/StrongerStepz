@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { LimitedSeatsNotice } from "@/components/site/LimitedSeatsNotice";
 import type { DoctorDocument } from "@/models/Doctor";
 
 /** `DoctorDocument` with its ObjectId serialized to a string so it can cross the Server → Client Component boundary. */
@@ -13,6 +14,7 @@ export interface DoctorsSectionProps {
   title?: string;
   doctors: DoctorViewModel[];
   onRegisterClick: () => void;
+  seatsAvailable: boolean;
 }
 
 /**
@@ -26,6 +28,7 @@ export function DoctorsSection({
   title = "You Are In Safe Hands",
   doctors,
   onRegisterClick,
+  seatsAvailable,
 }: DoctorsSectionProps) {
   if (doctors.length === 0) {
     return null;
@@ -71,6 +74,7 @@ export function DoctorsSection({
 
         <div className="mt-14 text-center">
           <Button onClick={onRegisterClick}>Register Now</Button>
+          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3" />
         </div>
       </Container>
     </Section>

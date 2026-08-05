@@ -272,7 +272,7 @@ export default function AdminRegistrationsPage() {
         isOpen={pendingDeleteId !== null}
         onClose={() => setPendingDeleteId(null)}
         title="Delete this registration?"
-        description="This can't be undone. Registrations with an associated payment, questionnaire response, or feedback response can't be deleted."
+        description="This can't be undone. This permanently removes the registration and every linked payment, questionnaire response, and feedback response — no orphaned records are left behind."
         footer={
           <>
             <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>

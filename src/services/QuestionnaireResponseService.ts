@@ -4,6 +4,7 @@ import { RegistrationRepository } from "@/repositories/RegistrationRepository";
 import type { QuestionnaireResponseDocument } from "@/models/QuestionnaireResponse";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { ConflictError } from "@/errors/ConflictError";
+import { QUESTIONNAIRE_PROMPTS } from "@/lib/constants/questionnaire";
 import type { PaginatedResult } from "@/types/pagination";
 import type {
   CreateQuestionnaireResponseInput,
@@ -44,25 +45,31 @@ export class QuestionnaireResponseService {
 
     return this.repository.create({
       registrationId: new Types.ObjectId(input.registrationId),
+      workshopId: registration.workshopId,
       question1Answer: input.question1Answer,
       question1OtherText: input.question1OtherText,
       question2Answer: input.question2Answer,
       question2OtherText: input.question2OtherText,
       question3Answer: input.question3Answer,
+      question1Text: QUESTIONNAIRE_PROMPTS.question1,
+      question2Text: QUESTIONNAIRE_PROMPTS.question2,
+      question3Text: QUESTIONNAIRE_PROMPTS.question3,
     });
   }
 
   /** Real skip/limit pagination — this collection is unbounded and append-only (§11 risk note). */
   async list(query: ListQuestionnaireResponsesQuery = {}): Promise<PaginatedResult<QuestionnaireResponseDocument>> {
-    const filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId">> = {};
+    const filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId" | "workshopId">> = {};
     if (query.registrationId) filter.registrationId = new Types.ObjectId(query.registrationId);
+    if (query.workshopId) filter.workshopId = new Types.ObjectId(query.workshopId);
     return this.repository.findPaginated(filter, query.page ?? DEFAULT_PAGE, query.limit ?? DEFAULT_LIMIT);
   }
 
   /** Unbounded read for the future .xlsx export route — mirrors how `RegistrationService.list()` feeds `buildRegistrationsWorkbook`. */
-  async listAll(registrationId?: string): Promise<QuestionnaireResponseDocument[]> {
-    const filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId">> = {};
+  async listAll(registrationId?: string, workshopId?: string): Promise<QuestionnaireResponseDocument[]> {
+    const filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId" | "workshopId">> = {};
     if (registrationId) filter.registrationId = new Types.ObjectId(registrationId);
+    if (workshopId) filter.workshopId = new Types.ObjectId(workshopId);
     return this.repository.findMany(filter);
   }
 

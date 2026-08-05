@@ -15,10 +15,14 @@ import type { FeedbackResponseDocument, FeedbackAnswer } from "@/models/Feedback
 import type { FeedbackFormDocument, FeedbackFormField } from "@/models/FeedbackForm";
 import type { PaginatedResult } from "@/types/pagination";
 
-type FeedbackResponseRow = Omit<FeedbackResponseDocument, "_id" | "formId" | "registrationId" | "createdAt" | "updatedAt"> & {
+type FeedbackResponseRow = Omit<
+  FeedbackResponseDocument,
+  "_id" | "formId" | "registrationId" | "workshopId" | "createdAt" | "updatedAt"
+> & {
   _id: string;
   formId: string;
   registrationId?: string;
+  workshopId?: string;
   createdAt: string;
 };
 
@@ -30,6 +34,11 @@ interface RegistrationLookup {
   email: string;
   phone: string;
   registrationNumber: string;
+}
+
+interface WorkshopOption {
+  _id: string;
+  title: string;
 }
 
 const PAGE_SIZE = 10;
@@ -46,9 +55,11 @@ export default function AdminFeedbackResponsesPage() {
   const [total, setTotal] = useState(0);
   const [forms, setForms] = useState<FeedbackFormRow[]>([]);
   const [registrationsById, setRegistrationsById] = useState<Record<string, RegistrationLookup>>({});
+  const [workshops, setWorkshops] = useState<WorkshopOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formFilter, setFormFilter] = useState("");
+  const [workshopFilter, setWorkshopFilter] = useState("");
   const [page, setPage] = useState(1);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
@@ -60,7 +71,11 @@ export default function AdminFeedbackResponsesPage() {
 
   async function loadStaticData() {
     try {
-      const [formsRes, registrationsRes] = await Promise.all([fetch("/api/feedback-forms"), fetch("/api/registrations")]);
+      const [formsRes, registrationsRes, workshopsRes] = await Promise.all([
+        fetch("/api/feedback-forms"),
+        fetch("/api/registrations"),
+        fetch("/api/workshops"),
+      ]);
       const formsBody = await formsRes.json();
       if (formsRes.ok && formsBody.success) {
         setForms(formsBody.data);
@@ -73,6 +88,10 @@ export default function AdminFeedbackResponsesPage() {
         }
         setRegistrationsById(lookup);
       }
+      const workshopsBody = await workshopsRes.json();
+      if (workshopsRes.ok && workshopsBody.success) {
+        setWorkshops(workshopsBody.data);
+      }
     } catch {
       // Non-fatal — the responses table still renders with raw ids if this fails.
     }
@@ -84,6 +103,7 @@ export default function AdminFeedbackResponsesPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
       if (formFilter) params.set("formId", formFilter);
+      if (workshopFilter) params.set("workshopId", workshopFilter);
       const response = await fetch(`/api/feedback-responses?${params.toString()}`);
       const body = await response.json();
       if (!response.ok || !body.success) {
@@ -107,32 +127,50 @@ export default function AdminFeedbackResponsesPage() {
   useEffect(() => {
     loadResponses();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only on page/filter change, not on every render
-  }, [page, formFilter]);
+  }, [page, formFilter, workshopFilter]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const viewingResponse = responses.find((r) => r._id === viewingId) ?? null;
   const viewingForm = viewingResponse ? formsById[viewingResponse.formId] : undefined;
   const viewingRegistration = viewingResponse?.registrationId ? registrationsById[viewingResponse.registrationId] : undefined;
 
-  function fieldLabel(formId: string, fieldKey: string): string {
-    const field = formsById[formId]?.fields.find((f: FeedbackFormField) => f.key === fieldKey);
-    return field?.label ?? fieldKey;
+  /** Falls back to the current form's field lookup only for pre-Phase-7 answers that lack a snapshotted `label`. */
+  function fieldLabel(answer: FeedbackAnswer, formId: string): string {
+    if (answer.label) return answer.label;
+    const field = formsById[formId]?.fields.find((f: FeedbackFormField) => f.key === answer.fieldKey);
+    return field?.label ?? answer.fieldKey;
   }
 
-  const exportHref = formFilter ? `/api/feedback-responses/export?formId=${formFilter}` : null;
+  const exportHref = formFilter
+    ? `/api/feedback-responses/export?formId=${formFilter}${workshopFilter ? `&workshopId=${workshopFilter}` : ""}`
+    : null;
 
   return (
     <AdminLayout navItems={ADMIN_NAV_ITEMS} activeHref="/admin/feedback-responses" pageTitle="Feedback Responses" headerActions={<LogoutButton />}>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Select
-          className="sm:w-64"
-          value={formFilter}
-          onChange={(event) => {
-            setFormFilter(event.target.value);
-            setPage(1);
-          }}
-          options={[{ value: "", label: "All Forms" }, ...forms.map((f) => ({ value: f._id, label: f.title }))]}
-        />
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <Select
+            className="sm:w-56"
+            value={formFilter}
+            onChange={(event) => {
+              setFormFilter(event.target.value);
+              setPage(1);
+            }}
+            options={[{ value: "", label: "All Forms" }, ...forms.map((f) => ({ value: f._id, label: f.title }))]}
+          />
+          <Select
+            className="sm:w-56"
+            value={workshopFilter}
+            onChange={(event) => {
+              setWorkshopFilter(event.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: "Overall (All Workshops)" },
+              ...workshops.map((w) => ({ value: w._id, label: w.title })),
+            ]}
+          />
+        </div>
         {exportHref ? (
           <a href={exportHref}>
             <Button variant="secondary">⬇ Export to Excel</Button>
@@ -216,7 +254,7 @@ export default function AdminFeedbackResponsesPage() {
             <div className="flex flex-col gap-3">
               {viewingResponse.answers.map((answer: FeedbackAnswer, index: number) => (
                 <div key={`${answer.fieldKey}-${index}`}>
-                  <h4 className="mb-1 font-semibold text-ink">{fieldLabel(viewingResponse.formId, answer.fieldKey)}</h4>
+                  <h4 className="mb-1 font-semibold text-ink">{fieldLabel(answer, viewingResponse.formId)}</h4>
                   <p className="text-ink-muted">{formatAnswerValue(answer.value)}</p>
                 </div>
               ))}

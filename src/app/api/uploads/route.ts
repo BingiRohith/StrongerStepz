@@ -5,11 +5,17 @@ import { ValidationError } from "@/errors/ValidationError";
 import { uploadFile } from "@/lib/uploads/uploadFile";
 import type { UploadResourceType } from "@/types/upload";
 
-/** Fixed allow-list of upload destinations — the client never picks the Cloudinary folder or resource type directly. */
+/**
+ * Fixed allow-list of upload destinations — the client never picks the
+ * Cloudinary folder or resource type directly. `pdfs` is deliberately not
+ * here: PDFs upload directly browser-to-Cloudinary via `/api/uploads/sign`
+ * instead, so a large file never has to pass through this Vercel function
+ * (see `UploadField.tsx` and `src/app/api/uploads/sign/route.ts`).
+ */
 const UPLOAD_FOLDERS = {
   testimonials: { cloudinaryFolder: "strongersteps/testimonials", resourceType: "image" as UploadResourceType },
   doctors: { cloudinaryFolder: "strongersteps/doctors", resourceType: "image" as UploadResourceType },
-  pdfs: { cloudinaryFolder: "strongersteps/pdfs", resourceType: "raw" as UploadResourceType },
+  "real-life-stories": { cloudinaryFolder: "strongersteps/real-life-stories", resourceType: "image" as UploadResourceType },
   homepage: { cloudinaryFolder: "strongersteps/homepage", resourceType: "image" as UploadResourceType },
 } as const satisfies Record<string, { cloudinaryFolder: string; resourceType: UploadResourceType }>;
 
@@ -17,8 +23,6 @@ type UploadFolder = keyof typeof UPLOAD_FOLDERS;
 
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-const PDF_MIME_TYPES = ["application/pdf"];
-const PDF_MAX_BYTES = 15 * 1024 * 1024;
 
 function isUploadFolder(value: string): value is UploadFolder {
   return value in UPLOAD_FOLDERS;
@@ -39,17 +43,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   const { cloudinaryFolder, resourceType } = UPLOAD_FOLDERS[folder];
-  const allowedMimeTypes = resourceType === "image" ? IMAGE_MIME_TYPES : PDF_MIME_TYPES;
-  const maxBytes = resourceType === "image" ? IMAGE_MAX_BYTES : PDF_MAX_BYTES;
 
-  if (!allowedMimeTypes.includes(file.type)) {
+  if (!IMAGE_MIME_TYPES.includes(file.type)) {
     throw new ValidationError("Validation failed", {
-      fieldErrors: { file: [`file type must be one of: ${allowedMimeTypes.join(", ")}`] },
+      fieldErrors: { file: [`file type must be one of: ${IMAGE_MIME_TYPES.join(", ")}`] },
     });
   }
-  if (file.size > maxBytes) {
+  if (file.size > IMAGE_MAX_BYTES) {
     throw new ValidationError("Validation failed", {
-      fieldErrors: { file: [`file must be smaller than ${maxBytes / (1024 * 1024)}MB`] },
+      fieldErrors: { file: [`file must be smaller than ${IMAGE_MAX_BYTES / (1024 * 1024)}MB`] },
     });
   }
 

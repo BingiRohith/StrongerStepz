@@ -58,6 +58,15 @@ export {
 } from "@/validators/doctor.schema";
 
 export {
+  createRealLifeStorySchema,
+  updateRealLifeStorySchema,
+  reorderRealLifeStoriesSchema,
+  type CreateRealLifeStoryInput,
+  type UpdateRealLifeStoryInput,
+  type ReorderRealLifeStoriesInput,
+} from "@/validators/realLifeStory.schema";
+
+export {
   createPdfDocumentSchema,
   updatePdfDocumentSchema,
   type CreatePdfDocumentInput,
@@ -90,3 +99,9 @@ export {
   type SubmitFeedbackResponseEnvelopeInput,
   type ListFeedbackResponsesQuery,
 } from "@/validators/feedbackResponse.schema";
+
+export {
+  updateWhatsappCommunitySchema,
+  type UpdateWhatsappCommunityInput,
+  type WhatsappCommunitySettings,
+} from "@/validators/whatsappCommunity.schema";

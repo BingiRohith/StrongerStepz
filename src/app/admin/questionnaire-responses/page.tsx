@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/admin/LogoutButton";
 import { ADMIN_NAV_ITEMS } from "@/components/admin/adminNav";
 import { Button } from "@/components/ui/Button";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { Select } from "@/components/ui/Select";
 import { Pagination } from "@/components/ui/Pagination";
 import { Loader } from "@/components/ui/Loader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -13,13 +14,15 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import type { QuestionnaireResponseDocument } from "@/models/QuestionnaireResponse";
 import type { PaginatedResult } from "@/types/pagination";
+import { QUESTIONNAIRE_PROMPTS } from "@/lib/constants/questionnaire";
 
 type QuestionnaireResponseRow = Omit<
   QuestionnaireResponseDocument,
-  "_id" | "registrationId" | "createdAt" | "updatedAt"
+  "_id" | "registrationId" | "workshopId" | "createdAt" | "updatedAt"
 > & {
   _id: string;
   registrationId: string;
+  workshopId?: string;
   createdAt: string;
 };
 
@@ -31,6 +34,11 @@ interface RegistrationLookup {
   registrationNumber: string;
   city: string;
   age: number;
+}
+
+interface WorkshopOption {
+  _id: string;
+  title: string;
 }
 
 const PAGE_SIZE = 10;
@@ -47,9 +55,11 @@ const FETCH_LIMIT = 500;
 export default function AdminQuestionnaireResponsesPage() {
   const [responses, setResponses] = useState<QuestionnaireResponseRow[]>([]);
   const [registrationsById, setRegistrationsById] = useState<Record<string, RegistrationLookup>>({});
+  const [workshops, setWorkshops] = useState<WorkshopOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [workshopFilter, setWorkshopFilter] = useState("");
   const [page, setPage] = useState(1);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -59,9 +69,13 @@ export default function AdminQuestionnaireResponsesPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [responsesRes, registrationsRes] = await Promise.all([
-        fetch(`/api/questionnaire-responses?limit=${FETCH_LIMIT}`),
+      const params = new URLSearchParams({ limit: String(FETCH_LIMIT) });
+      if (workshopFilter) params.set("workshopId", workshopFilter);
+
+      const [responsesRes, registrationsRes, workshopsRes] = await Promise.all([
+        fetch(`/api/questionnaire-responses?${params.toString()}`),
         fetch("/api/registrations"),
+        fetch("/api/workshops"),
       ]);
       const responsesBody = await responsesRes.json();
       if (!responsesRes.ok || !responsesBody.success) {
@@ -79,6 +93,11 @@ export default function AdminQuestionnaireResponsesPage() {
         }
         setRegistrationsById(lookup);
       }
+
+      const workshopsBody = await workshopsRes.json();
+      if (workshopsRes.ok && workshopsBody.success) {
+        setWorkshops(workshopsBody.data);
+      }
     } catch {
       setLoadError("Something went wrong loading questionnaire responses.");
     } finally {
@@ -88,7 +107,8 @@ export default function AdminQuestionnaireResponsesPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only on workshop filter change, not on every render
+  }, [workshopFilter]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -111,7 +131,9 @@ export default function AdminQuestionnaireResponsesPage() {
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const viewingResponse = responses.find((r) => r._id === viewingId) ?? null;
   const viewingRegistration = viewingResponse ? registrationsById[viewingResponse.registrationId] : undefined;
-  const exportHref = "/api/questionnaire-responses/export";
+  const exportHref = workshopFilter
+    ? `/api/questionnaire-responses/export?workshopId=${workshopFilter}`
+    : "/api/questionnaire-responses/export";
 
   async function handleDelete() {
     if (!pendingDeleteId) return;
@@ -137,16 +159,30 @@ export default function AdminQuestionnaireResponsesPage() {
       pageTitle="Questionnaire Responses"
       headerActions={<LogoutButton />}
     >
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <SearchBar
-          className="sm:max-w-xs"
-          placeholder="Search name, email, phone, reg #…"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
-        />
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <SearchBar
+            className="sm:w-64"
+            placeholder="Search name, email, phone, reg #…"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+          <Select
+            className="sm:w-56"
+            value={workshopFilter}
+            onChange={(event) => {
+              setWorkshopFilter(event.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: "Overall (All Workshops)" },
+              ...workshops.map((w) => ({ value: w._id, label: w.title })),
+            ]}
+          />
+        </div>
         <a href={exportHref}>
           <Button variant="secondary">⬇ Export to Excel</Button>
         </a>
@@ -237,7 +273,7 @@ export default function AdminQuestionnaireResponsesPage() {
             </div>
 
             <div>
-              <h4 className="mb-1 font-semibold text-ink">Question 1</h4>
+              <h4 className="mb-1 font-semibold text-ink">{viewingResponse.question1Text ?? QUESTIONNAIRE_PROMPTS.question1}</h4>
               <p className="text-ink-muted">
                 {viewingResponse.question1Answer}
                 {viewingResponse.question1Answer === "Other" && viewingResponse.question1OtherText
@@ -246,7 +282,7 @@ export default function AdminQuestionnaireResponsesPage() {
               </p>
             </div>
             <div>
-              <h4 className="mb-1 font-semibold text-ink">Question 2</h4>
+              <h4 className="mb-1 font-semibold text-ink">{viewingResponse.question2Text ?? QUESTIONNAIRE_PROMPTS.question2}</h4>
               <p className="text-ink-muted">
                 {viewingResponse.question2Answer}
                 {viewingResponse.question2Answer === "Other" && viewingResponse.question2OtherText
@@ -255,7 +291,7 @@ export default function AdminQuestionnaireResponsesPage() {
               </p>
             </div>
             <div>
-              <h4 className="mb-1 font-semibold text-ink">Question 3</h4>
+              <h4 className="mb-1 font-semibold text-ink">{viewingResponse.question3Text ?? QUESTIONNAIRE_PROMPTS.question3}</h4>
               <p className="text-ink-muted">{viewingResponse.question3Answer}</p>
             </div>
           </div>

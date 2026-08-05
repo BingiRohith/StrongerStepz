@@ -6,7 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
  * call time, cache the configured client" pattern.
  */
 
-function getCloudinaryCredentials(): { cloudName: string; apiKey: string; apiSecret: string } {
+export function getCloudinaryCredentials(): { cloudName: string; apiKey: string; apiSecret: string } {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;

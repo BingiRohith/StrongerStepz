@@ -15,8 +15,10 @@ import { Hero } from "@/components/site/Hero";
 import { LiveStatsBar } from "@/components/site/LiveStatsBar";
 import { PricingSection } from "@/components/site/PricingSection";
 import { RegisterModal } from "@/components/site/RegisterModal";
+import { RealLifeStoriesSection, type RealLifeStoryViewModel } from "@/components/site/RealLifeStoriesSection";
 import { TestimonialsSection, type TestimonialViewModel } from "@/components/site/TestimonialsSection";
 import type { WorkshopDocument } from "@/models/Workshop";
+import type { WorkshopStats } from "@/types/workshop";
 
 /** Server-fetched Workshop with its ObjectId serialized to a string so it can cross the Server → Client Component boundary. */
 export type WorkshopViewModel = Omit<WorkshopDocument, "_id"> & { _id: string };
@@ -31,8 +33,13 @@ export interface LandingPageProps {
   workshop: WorkshopViewModel;
   testimonials: TestimonialViewModel[];
   doctors: DoctorViewModel[];
+  realLifeStories: RealLifeStoryViewModel[];
   homepageImages: LandingPageHomepageImages;
   audienceContent: AudienceContent;
+  /** Whether the active workshop still has open seats — drives the "Limited Seats" CTA notice across every Register/Join button. */
+  seatsAvailable: boolean;
+  /** Live registered/community counts for the footer stats bar — see `RegistrationService.getStats()`. */
+  stats: WorkshopStats;
 }
 
 /**
@@ -46,7 +53,16 @@ export interface LandingPageProps {
  * from `src/mock`. The hero/benefits/audience images come from the
  * admin-managed `homepageImages` Settings row (Phase 8) via `homepageImages`.
  */
-export function LandingPage({ workshop, testimonials, doctors, homepageImages, audienceContent }: LandingPageProps) {
+export function LandingPage({
+  workshop,
+  testimonials,
+  doctors,
+  realLifeStories,
+  homepageImages,
+  audienceContent,
+  seatsAvailable,
+  stats,
+}: LandingPageProps) {
   const registerModal = useDisclosure();
 
   const agendaDetails = [
@@ -78,11 +94,7 @@ export function LandingPage({ workshop, testimonials, doctors, homepageImages, a
         </>
       }
       afterFooter={
-        <LiveStatsBar
-          stats={statsContent.stats}
-          registeredLabel={statsContent.registeredLabel}
-          communityLabel={statsContent.communityLabel}
-        />
+        <LiveStatsBar stats={stats} registeredLabel={statsContent.registeredLabel} communityLabel={statsContent.communityLabel} />
       }
     >
       <Hero
@@ -93,17 +105,21 @@ export function LandingPage({ workshop, testimonials, doctors, homepageImages, a
         imageAlt={`${workshop.title} banner`}
         discoverHref="#doctors"
         onRegisterClick={registerModal.open}
+        seatsAvailable={seatsAvailable}
       />
 
-      <TestimonialsSection testimonials={testimonials} onRegisterClick={registerModal.open} />
+      <TestimonialsSection testimonials={testimonials} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} />
 
-      <DoctorsSection doctors={doctors} onRegisterClick={registerModal.open} />
+      <RealLifeStoriesSection stories={realLifeStories} />
+
+      <DoctorsSection doctors={doctors} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} />
 
       <BenefitsSection
         items={workshop.benefits}
         imageSrc={homepageImages.benefits}
         imageAlt="Bright and calm wellness studio"
         onRegisterClick={registerModal.open}
+        seatsAvailable={seatsAvailable}
       />
 
       <AudienceSection
@@ -122,6 +138,7 @@ export function LandingPage({ workshop, testimonials, doctors, homepageImages, a
           includes: workshop.passIncludes ?? [],
         }}
         onRegisterClick={registerModal.open}
+        seatsAvailable={seatsAvailable}
       />
 
       <FaqSection items={workshop.faq} />
@@ -131,6 +148,7 @@ export function LandingPage({ workshop, testimonials, doctors, homepageImages, a
         subtitle={ctaContent.subtitle}
         items={ctaContent.items}
         onRegisterClick={registerModal.open}
+        seatsAvailable={seatsAvailable}
       />
 
       <RegisterModal
