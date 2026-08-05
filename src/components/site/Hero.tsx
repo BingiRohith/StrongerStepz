@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { LimitedSeatsNotice } from "@/components/site/LimitedSeatsNotice";
 
 export interface HeroProps {
   title: string;
@@ -11,6 +12,7 @@ export interface HeroProps {
   imageAlt: string;
   discoverHref: string;
   onRegisterClick: () => void;
+  seatsAvailable: boolean;
 }
 
 /**
@@ -20,7 +22,16 @@ export interface HeroProps {
  * driven by the active workshop's title, which also gives the page a real
  * top-level heading for SEO/accessibility.
  */
-export function Hero({ title, badgeText, description, imageSrc, imageAlt, discoverHref, onRegisterClick }: HeroProps) {
+export function Hero({
+  title,
+  badgeText,
+  description,
+  imageSrc,
+  imageAlt,
+  discoverHref,
+  onRegisterClick,
+  seatsAvailable,
+}: HeroProps) {
   return (
     <section
       id="hero"
@@ -37,13 +48,16 @@ export function Hero({ title, badgeText, description, imageSrc, imageAlt, discov
             {badgeText}
           </Badge>
           <p className="mb-12 text-lg leading-relaxed text-ink-muted md:text-xl">{description}</p>
-          <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <Button href={discoverHref} variant="secondary">
               Discover the Workshop
             </Button>
-            <Button type="button" variant="primary" onClick={onRegisterClick}>
-              Register Now
-            </Button>
+            <div>
+              <Button type="button" variant="primary" onClick={onRegisterClick}>
+                Register Now
+              </Button>
+              <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3 text-left" />
+            </div>
           </div>
         </div>
 

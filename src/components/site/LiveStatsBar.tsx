@@ -9,8 +9,9 @@ export interface LiveStatsBarProps {
 
 /**
  * The legacy site polled a Google Apps Script for these numbers on every
- * page load. For now they're static mock values — Phase 4 swaps this for a
- * real `/api/stats` call without changing this component's props.
+ * page load. As of Phase 7, `stats` is a live read from
+ * `RegistrationService.getStats()` (see `src/app/page.tsx`) — this
+ * component just renders whatever it's given.
  */
 export function LiveStatsBar({ stats, registeredLabel, communityLabel }: LiveStatsBarProps) {
   return (

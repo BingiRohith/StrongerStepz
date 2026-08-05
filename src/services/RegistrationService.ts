@@ -1,14 +1,32 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { RegistrationRepository } from "@/repositories/RegistrationRepository";
 import { WorkshopRepository } from "@/repositories/WorkshopRepository";
 import { PaymentRepository } from "@/repositories/PaymentRepository";
 import { QuestionnaireResponseRepository } from "@/repositories/QuestionnaireResponseRepository";
 import { FeedbackResponseRepository } from "@/repositories/FeedbackResponseRepository";
 import { RegistrationNumberGenerator } from "@/services/RegistrationNumberGenerator";
-import type { RegistrationDocument } from "@/models/Registration";
+import { SUCCESSFUL_REGISTRATION_STATUSES, type RegistrationDocument } from "@/models/Registration";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { ConflictError } from "@/errors/ConflictError";
+import { connectToDatabase } from "@/lib/db/connect";
 import type { CreateRegistrationInput, ListRegistrationsQuery } from "@/validators/registration.schema";
+
+export interface RegistrationStats {
+  /** Count of registrations in any status counted as a "successful registration" — see `SUCCESSFUL_REGISTRATION_STATUSES`. */
+  registered: number;
+  /** Count of registrations that have joined the WhatsApp community (clicked through post-download). */
+  community: number;
+}
+
+/** True for the specific Mongo/Mongoose error transactions throw on a deployment without replica-set support (e.g. standalone `mongod`). */
+function isTransactionsUnsupportedError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Transaction numbers are only allowed") ||
+    message.includes("This MongoDB deployment does not support retryable writes") ||
+    message.includes("IllegalOperation")
+  );
+}
 
 /**
  * Business-logic layer for registrations. This is where the rules from the
@@ -47,6 +65,32 @@ export class RegistrationService {
       throw new NotFoundError(`Registration "${id}" not found`);
     }
     return registration;
+  }
+
+  /** Mirrors the `registrationLimit` capacity check in `register()` — backs the public "Limited Seats" CTA notice. `null` limit means unlimited seats. */
+  async hasAvailableSeats(workshopId: string, registrationLimit: number | null | undefined): Promise<boolean> {
+    if (registrationLimit == null) {
+      return true;
+    }
+    const currentCount = await this.repository.countByWorkshop(workshopId);
+    return currentCount < registrationLimit;
+  }
+
+  /** Backs the homepage "Registered Members" / "Joined WhatsApp & Accessed Tools" live stats bar — always a fresh count, never cached. */
+  async getStats(): Promise<RegistrationStats> {
+    const [registered, community] = await Promise.all([
+      this.repository.count({ status: { $in: SUCCESSFUL_REGISTRATION_STATUSES } }),
+      this.repository.count({ joinedCommunity: true }),
+    ]);
+    return { registered, community };
+  }
+
+  /** Idempotent: repeated calls (refresh, double-click) just re-set the same `true` — the stat above counts documents, not events. */
+  async joinCommunity(id: string): Promise<void> {
+    const updated = await this.repository.updateById(id, { joinedCommunity: true });
+    if (!updated) {
+      throw new NotFoundError(`Registration "${id}" not found`);
+    }
   }
 
   async register(input: CreateRegistrationInput): Promise<RegistrationDocument> {
@@ -99,27 +143,47 @@ export class RegistrationService {
     });
   }
 
-  /** Blocks deletion (rather than cascading) whenever a Payment, QuestionnaireResponse, or FeedbackResponse still references this registration. */
+  /**
+   * Cascading delete: removes every Payment, QuestionnaireResponse, and
+   * FeedbackResponse linked to this registration, then the registration
+   * itself — no orphan records left behind. Uses a Mongo transaction when
+   * the deployment supports one (any replica set, including every MongoDB
+   * Atlas tier); falls back to sequential deletes otherwise. The fallback
+   * still deletes the registration *last*, so a partial failure never
+   * leaves it stranded without its (now-deleted) dependents, and every step
+   * is a filter-based delete — safe to simply retry `delete()` again if it
+   * fails partway.
+   */
   async delete(id: string): Promise<void> {
     await this.getById(id);
+    const registrationId = new Types.ObjectId(id);
 
-    const [paymentCount, questionnaireResponse, feedbackResponseCount] = await Promise.all([
-      this.paymentRepository.count({ registrationId: new Types.ObjectId(id) }),
-      this.questionnaireResponseRepository.findByRegistrationId(id),
-      this.feedbackResponseRepository.count({ registrationId: new Types.ObjectId(id) }),
-    ]);
+    await connectToDatabase();
+    const session = await mongoose.startSession();
+    try {
+      let transacted = false;
+      try {
+        await session.withTransaction(async () => {
+          await this.paymentRepository.deleteMany({ registrationId }, session);
+          await this.questionnaireResponseRepository.deleteMany({ registrationId }, session);
+          await this.feedbackResponseRepository.deleteMany({ registrationId }, session);
+          await this.repository.deleteById(id, session);
+        });
+        transacted = true;
+      } catch (error) {
+        if (!isTransactionsUnsupportedError(error)) {
+          throw error;
+        }
+      }
 
-    const blockers: string[] = [];
-    if (paymentCount > 0) blockers.push("payment record");
-    if (questionnaireResponse) blockers.push("questionnaire response");
-    if (feedbackResponseCount > 0) blockers.push("feedback response");
-
-    if (blockers.length > 0) {
-      throw new ConflictError(
-        `Cannot delete this registration because it has an associated ${blockers.join(", ")}. Remove those records first.`
-      );
+      if (!transacted) {
+        await this.paymentRepository.deleteMany({ registrationId });
+        await this.questionnaireResponseRepository.deleteMany({ registrationId });
+        await this.feedbackResponseRepository.deleteMany({ registrationId });
+        await this.repository.deleteById(id);
+      }
+    } finally {
+      await session.endSession();
     }
-
-    await this.repository.deleteById(id);
   }
 }

@@ -50,6 +50,7 @@ export const createQuestionnaireResponseSchema = z
 
 export const listQuestionnaireResponsesQuerySchema = z.object({
   registrationId: objectIdSchema.optional(),
+  workshopId: objectIdSchema.optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
 });

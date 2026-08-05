@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { QUESTIONNAIRE_PROMPTS } from "@/lib/constants/questionnaire";
 
 const QUESTION1_OPTIONS = [
   "I want to stay healthy as I age.",
@@ -44,6 +45,12 @@ interface PdfDocumentView {
   _id: string;
   title: string;
   fileUrl: string;
+}
+
+interface WhatsappCommunitySettings {
+  inviteUrl: string;
+  buttonText: string;
+  enabled: boolean;
 }
 
 interface RadioQuestionProps {
@@ -138,12 +145,31 @@ export default function QuestionnairePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [pdf, setPdf] = useState<PdfDocumentView | null>(null);
+  const [whatsappCommunity, setWhatsappCommunity] = useState<WhatsappCommunitySettings | null>(null);
+  const [joinedCommunity, setJoinedCommunity] = useState(false);
+
+  async function fetchActivePdf(): Promise<PdfDocumentView | undefined> {
+    const response = await fetch("/api/pdfs/active");
+    const body = (await response.json()) as ApiEnvelope<PdfDocumentView[]>;
+    return response.ok && body.success ? body.data?.[0] : undefined;
+  }
+
+  async function fetchWhatsappCommunity(): Promise<WhatsappCommunitySettings | undefined> {
+    const response = await fetch("/api/whatsapp-community");
+    const body = (await response.json()) as ApiEnvelope<WhatsappCommunitySettings>;
+    return response.ok && body.success ? body.data : undefined;
+  }
 
   async function beginPdfDownloadAndFinish() {
     try {
-      const response = await fetch("/api/pdfs/active");
-      const body = (await response.json()) as ApiEnvelope<PdfDocumentView[]>;
-      const activePdf = response.ok && body.success ? body.data?.[0] : undefined;
+      const [activePdf, whatsapp] = await Promise.all([
+        fetchActivePdf().catch(() => undefined),
+        fetchWhatsappCommunity().catch(() => undefined),
+      ]);
+
+      if (whatsapp) {
+        setWhatsappCommunity(whatsapp);
+      }
 
       if (activePdf?.fileUrl) {
         setPdf(activePdf);
@@ -156,11 +182,20 @@ export default function QuestionnairePage() {
         link.remove();
       }
     } catch {
-      // No active PDF, or the lookup failed — still show Thank You gracefully.
+      // No active PDF, or a lookup failed — still show Thank You gracefully.
     } finally {
       setSubmitted(true);
       setSubmitting(false);
     }
+  }
+
+  /** Opens the invite link in a new tab and best-effort records the join — fire-and-forget, since the current tab stays alive to let it complete. */
+  function handleJoinCommunityClick() {
+    if (joinedCommunity) return;
+    setJoinedCommunity(true);
+    fetch(`/api/registrations/${registrationId}/join-community`, { method: "PATCH" }).catch(() => {
+      // Best-effort — the click still opens the invite link either way.
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -232,6 +267,19 @@ export default function QuestionnairePage() {
             ) : (
               <p className="text-sm text-ink-muted">See you at the workshop!</p>
             )}
+            {whatsappCommunity?.enabled && whatsappCommunity.inviteUrl ? (
+              <a
+                href={whatsappCommunity.inviteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleJoinCommunityClick}
+                className="mt-4 block"
+              >
+                <Button size="lg" className="w-full bg-[#25D366] shadow-none hover:bg-[#1ebc59]">
+                  📱 {whatsappCommunity.buttonText}
+                </Button>
+              </a>
+            ) : null}
           </div>
         ) : (
           <>
@@ -241,7 +289,7 @@ export default function QuestionnairePage() {
             </p>
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
               <RadioQuestion
-                legend="1. What brings you to this workshop?"
+                legend={`1. ${QUESTIONNAIRE_PROMPTS.question1}`}
                 name="question1Answer"
                 options={QUESTION1_OPTIONS}
                 value={question1Answer}
@@ -254,7 +302,7 @@ export default function QuestionnairePage() {
                 disabled={submitting}
               />
               <RadioQuestion
-                legend="2. Who are you attending for?"
+                legend={`2. ${QUESTIONNAIRE_PROMPTS.question2}`}
                 name="question2Answer"
                 options={QUESTION2_OPTIONS}
                 value={question2Answer}
@@ -267,7 +315,7 @@ export default function QuestionnairePage() {
                 disabled={submitting}
               />
               <RadioQuestion
-                legend="3. How active are you currently?"
+                legend={`3. ${QUESTIONNAIRE_PROMPTS.question3}`}
                 name="question3Answer"
                 options={QUESTION3_OPTIONS}
                 value={question3Answer}

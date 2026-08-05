@@ -7,6 +7,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Is This For Me?", href: "/admin/audience-content" },
   { label: "Registrations", href: "/admin/registrations" },
   { label: "Testimonials", href: "/admin/testimonials" },
+  { label: "Real Life Stories", href: "/admin/real-life-stories" },
   { label: "Doctors", href: "/admin/doctors" },
   { label: "PDF Management", href: "/admin/pdfs" },
   { label: "Feedback Forms", href: "/admin/feedback-forms" },

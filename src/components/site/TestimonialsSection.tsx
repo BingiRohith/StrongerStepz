@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { LimitedSeatsNotice } from "@/components/site/LimitedSeatsNotice";
 import type { TestimonialDocument } from "@/models/Testimonial";
 
 /** `TestimonialDocument` with its ObjectId serialized to a string so it can cross the Server → Client Component boundary. */
@@ -12,6 +13,7 @@ export interface TestimonialsSectionProps {
   subtitle?: string;
   testimonials: TestimonialViewModel[];
   onRegisterClick: () => void;
+  seatsAvailable: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export function TestimonialsSection({
   subtitle = "Real stories from people who found their strength again.",
   testimonials,
   onRegisterClick,
+  seatsAvailable,
 }: TestimonialsSectionProps) {
   if (testimonials.length === 0) {
     return null;
@@ -71,6 +74,7 @@ export function TestimonialsSection({
           <Button size="lg" onClick={onRegisterClick}>
             Register Now
           </Button>
+          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3" />
         </div>
       </Container>
     </Section>

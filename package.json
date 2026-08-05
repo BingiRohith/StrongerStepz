@@ -7,7 +7,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "migrate:phase7": "tsx scripts/migrate-phase7.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.5.20",

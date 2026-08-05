@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { LimitedSeatsNotice } from "@/components/site/LimitedSeatsNotice";
 
 export interface BenefitsSectionProps {
   title?: string;
@@ -10,6 +11,7 @@ export interface BenefitsSectionProps {
   imageSrc: string;
   imageAlt: string;
   onRegisterClick: () => void;
+  seatsAvailable: boolean;
 }
 
 /** "What You Will Learn" — the takeaway checklist, sourced from the active workshop's `benefits`. */
@@ -20,6 +22,7 @@ export function BenefitsSection({
   imageSrc,
   imageAlt,
   onRegisterClick,
+  seatsAvailable,
 }: BenefitsSectionProps) {
   return (
     <Section>
@@ -44,6 +47,7 @@ export function BenefitsSection({
             ))}
           </ul>
           <Button onClick={onRegisterClick}>Register Now</Button>
+          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3 text-left" />
         </div>
 
         <div className="relative order-1 aspect-square overflow-hidden rounded-3xl shadow-lg lg:order-2">

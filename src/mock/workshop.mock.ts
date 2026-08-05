@@ -9,8 +9,10 @@
  * `DoctorsSection.tsx`. As of Phase 8, the hero/benefits/audience image
  * URLs come from `HomepageImagesService` instead of this file or Workshop.
  * The "Is This For Me?" title + statements come from `AudienceContentService`.
+ * The live stats bar's numbers come from `RegistrationService.getStats()` —
+ * only its labels stay here.
  */
-import type { ComparisonColumn, WorkshopStats } from "@/types/workshop";
+import type { ComparisonColumn } from "@/types/workshop";
 
 export const siteContent = {
   contactEmail: "strongersteps50@gmail.com",
@@ -40,7 +42,6 @@ export const footerContent = {
 };
 
 export const statsContent = {
-  stats: { registered: 1, community: 1 } satisfies WorkshopStats,
   registeredLabel: "Registered Members",
   communityLabel: "Joined WhatsApp & Accessed Tools",
 };

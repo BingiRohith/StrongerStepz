@@ -17,7 +17,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     await requireAdmin(request);
 
     const registrationId = request.nextUrl.searchParams.get("registrationId") ?? undefined;
-    const responses = await service.listAll(registrationId);
+    const workshopId = request.nextUrl.searchParams.get("workshopId") ?? undefined;
+    const responses = await service.listAll(registrationId, workshopId);
 
     const buffer = await buildQuestionnaireResponsesWorkbook(responses);
     const filename = buildTimestampedExportFilename("Questionnaire-Responses");

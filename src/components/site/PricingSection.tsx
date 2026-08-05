@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { LimitedSeatsNotice } from "@/components/site/LimitedSeatsNotice";
 import type { WorkshopAgendaItem } from "@/models/Workshop";
 
 export interface PricingPlan {
@@ -18,6 +19,7 @@ export interface PricingSectionProps {
   details: WorkshopAgendaItem[];
   plan: PricingPlan;
   onRegisterClick: () => void;
+  seatsAvailable: boolean;
 }
 
 function formatInr(amount: number): string {
@@ -31,6 +33,7 @@ export function PricingSection({
   details,
   plan,
   onRegisterClick,
+  seatsAvailable,
 }: PricingSectionProps) {
   const {
     title: planTitle = "Workshop Registration",
@@ -85,6 +88,7 @@ export function PricingSection({
           <Button size="lg" className="w-full" onClick={onRegisterClick}>
             {ctaLabel}
           </Button>
+          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-4" />
           <p className="mt-5 text-sm font-semibold text-ink-muted">{secureText}</p>
         </aside>
       </Container>

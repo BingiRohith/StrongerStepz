@@ -1,6 +1,9 @@
 export { Hero } from "./Hero";
 export type { HeroProps } from "./Hero";
 
+export { LimitedSeatsNotice } from "./LimitedSeatsNotice";
+export type { LimitedSeatsNoticeProps } from "./LimitedSeatsNotice";
+
 export { ChallengeSection } from "./ChallengeSection";
 export type { ChallengeSectionProps } from "./ChallengeSection";
 
@@ -9,6 +12,9 @@ export type { AboutSectionProps } from "./AboutSection";
 
 export { TestimonialsSection } from "./TestimonialsSection";
 export type { TestimonialsSectionProps, TestimonialViewModel } from "./TestimonialsSection";
+
+export { RealLifeStoriesSection } from "./RealLifeStoriesSection";
+export type { RealLifeStoriesSectionProps, RealLifeStoryViewModel } from "./RealLifeStoriesSection";
 
 export { DoctorsSection } from "./DoctorsSection";
 export type { DoctorsSectionProps, DoctorViewModel } from "./DoctorsSection";

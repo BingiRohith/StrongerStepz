@@ -11,20 +11,25 @@ import { getSessionCookieName } from "@/lib/auth/session";
  * public "feedback form by id" read (only returns published forms — see
  * `FeedbackFormService.getPublicById`), and the public
  * questionnaire/feedback submission POSTs. `/api/uploads` gets no
- * exception — admin-only, always.
+ * exception — admin-only, always. `/api/stats` isn't listed here at all —
+ * it's simply not in the matcher below, so it's public by default (same as
+ * `/api/payments/*`).
  */
 const PUBLIC_API_EXCEPTIONS: Array<{ pattern: RegExp; methods: string[] }> = [
   { pattern: /^\/api\/workshops\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/workshops\/slug\/[^/]+$/, methods: ["GET"] },
   { pattern: /^\/api\/registrations$/, methods: ["POST"] },
+  { pattern: /^\/api\/registrations\/[^/]+\/join-community$/, methods: ["PATCH"] },
   { pattern: /^\/api\/testimonials\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/doctors\/active$/, methods: ["GET"] },
+  { pattern: /^\/api\/real-life-stories\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/pdfs\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/pdfs\/[^/]+\/download$/, methods: ["GET"] },
   { pattern: /^\/api\/feedback-forms\/active$/, methods: ["GET"] },
   { pattern: /^\/api\/feedback-forms\/public\/[^/]+$/, methods: ["GET"] },
   { pattern: /^\/api\/questionnaire-responses$/, methods: ["POST"] },
   { pattern: /^\/api\/feedback-responses$/, methods: ["POST"] },
+  { pattern: /^\/api\/whatsapp-community$/, methods: ["GET"] },
 ];
 
 function isPublicApiException(pathname: string, method: string): boolean {
@@ -60,12 +65,14 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/uploads") ||
     pathname.startsWith("/api/testimonials") ||
     pathname.startsWith("/api/doctors") ||
+    pathname.startsWith("/api/real-life-stories") ||
     pathname.startsWith("/api/pdfs") ||
     pathname.startsWith("/api/questionnaire-responses") ||
     pathname.startsWith("/api/feedback-forms") ||
     pathname.startsWith("/api/feedback-responses") ||
     pathname.startsWith("/api/homepage-images") ||
-    pathname.startsWith("/api/audience-content");
+    pathname.startsWith("/api/audience-content") ||
+    pathname.startsWith("/api/whatsapp-community");
 
   if (!requiresAuth) {
     return NextResponse.next();
@@ -93,11 +100,13 @@ export const config = {
     "/api/uploads/:path*",
     "/api/testimonials/:path*",
     "/api/doctors/:path*",
+    "/api/real-life-stories/:path*",
     "/api/pdfs/:path*",
     "/api/questionnaire-responses/:path*",
     "/api/feedback-forms/:path*",
     "/api/feedback-responses/:path*",
     "/api/homepage-images/:path*",
     "/api/audience-content/:path*",
+    "/api/whatsapp-community/:path*",
   ],
 };

@@ -25,8 +25,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       throw new ValidationError("Validation failed", { fieldErrors: { formId: ["formId is required"] } });
     }
 
+    const workshopId = request.nextUrl.searchParams.get("workshopId") ?? undefined;
     const form = await formService.getById(formId);
-    const responses = await responseService.listAll(formId);
+    const responses = await responseService.listAll(formId, workshopId);
 
     const buffer = await buildFeedbackResponsesWorkbook(form, responses);
     const filename = buildTimestampedExportFilename(form.title);

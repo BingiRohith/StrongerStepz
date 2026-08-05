@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 import { FeedbackResponseRepository } from "@/repositories/FeedbackResponseRepository";
 import { FeedbackFormRepository } from "@/repositories/FeedbackFormRepository";
-import type { FeedbackResponseDocument } from "@/models/FeedbackResponse";
+import { RegistrationRepository } from "@/repositories/RegistrationRepository";
+import type { FeedbackResponseDocument, FeedbackAnswer } from "@/models/FeedbackResponse";
 import type { FeedbackFormField } from "@/models/FeedbackForm";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { ValidationError } from "@/errors/ValidationError";
@@ -73,7 +74,8 @@ function validateAnswer(field: FeedbackFormField, value: unknown): string | null
 export class FeedbackResponseService {
   constructor(
     protected readonly repository: FeedbackResponseRepository = new FeedbackResponseRepository(),
-    protected readonly formRepository: FeedbackFormRepository = new FeedbackFormRepository()
+    protected readonly formRepository: FeedbackFormRepository = new FeedbackFormRepository(),
+    protected readonly registrationRepository: RegistrationRepository = new RegistrationRepository()
   ) {}
 
   async submit(input: SubmitFeedbackResponseEnvelopeInput): Promise<FeedbackResponseDocument> {
@@ -82,6 +84,7 @@ export class FeedbackResponseService {
       throw new NotFoundError(`Feedback form "${input.formId}" not found`);
     }
 
+    const fieldsByKey = new Map(form.fields.map((field) => [field.key, field]));
     const answersByKey = new Map(input.answers.map((answer) => [answer.fieldKey, answer.value]));
     const fieldErrors: Record<string, string[]> = {};
 
@@ -96,24 +99,38 @@ export class FeedbackResponseService {
       throw new ValidationError("Validation failed", { fieldErrors });
     }
 
+    // Snapshot each field's current label alongside its answer — a later
+    // edit/removal of the form field must never change how this submission
+    // renders (§3/§9 of the plan).
+    const answers: FeedbackAnswer[] = input.answers.map((answer) => ({
+      fieldKey: answer.fieldKey,
+      label: fieldsByKey.get(answer.fieldKey)?.label,
+      value: answer.value,
+    }));
+
+    const registration = input.registrationId ? await this.registrationRepository.findById(input.registrationId) : null;
+
     return this.repository.create({
       formId: new Types.ObjectId(input.formId),
       registrationId: input.registrationId ? new Types.ObjectId(input.registrationId) : undefined,
-      answers: input.answers,
+      workshopId: registration?.workshopId,
+      answers,
     });
   }
 
   /** Real skip/limit pagination — this collection is unbounded and append-only (§11 risk note). */
   async list(query: ListFeedbackResponsesQuery = {}): Promise<PaginatedResult<FeedbackResponseDocument>> {
-    const filter: Partial<Pick<FeedbackResponseDocument, "formId">> = {};
+    const filter: Partial<Pick<FeedbackResponseDocument, "formId" | "workshopId">> = {};
     if (query.formId) filter.formId = new Types.ObjectId(query.formId);
+    if (query.workshopId) filter.workshopId = new Types.ObjectId(query.workshopId);
     return this.repository.findPaginated(filter, query.page ?? DEFAULT_PAGE, query.limit ?? DEFAULT_LIMIT);
   }
 
   /** Unbounded read for the future .xlsx export route (columns derived from the form's fields[] at export time). */
-  async listAll(formId?: string): Promise<FeedbackResponseDocument[]> {
-    const filter: Partial<Pick<FeedbackResponseDocument, "formId">> = {};
+  async listAll(formId?: string, workshopId?: string): Promise<FeedbackResponseDocument[]> {
+    const filter: Partial<Pick<FeedbackResponseDocument, "formId" | "workshopId">> = {};
     if (formId) filter.formId = new Types.ObjectId(formId);
+    if (workshopId) filter.workshopId = new Types.ObjectId(workshopId);
     return this.repository.findMany(filter);
   }
 

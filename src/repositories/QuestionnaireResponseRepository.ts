@@ -17,7 +17,7 @@ export class QuestionnaireResponseRepository extends BaseRepository<Questionnair
 
   /** Real skip/limit pagination — this collection is unbounded and append-only, unlike Workshop's client-paginated list. */
   async findPaginated(
-    filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId">>,
+    filter: Partial<Pick<QuestionnaireResponseDocument, "registrationId" | "workshopId">>,
     page: number,
     limit: number
   ): Promise<PaginatedResult<QuestionnaireResponseDocument>> {

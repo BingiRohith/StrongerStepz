@@ -22,6 +22,7 @@ export const submitFeedbackResponseEnvelopeSchema = z.object({
 
 export const listFeedbackResponsesQuerySchema = z.object({
   formId: objectIdSchema.optional(),
+  workshopId: objectIdSchema.optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
 });

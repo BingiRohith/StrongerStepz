@@ -185,7 +185,7 @@ export default function PaymentPage() {
     });
 
     checkout.on("payment.failed", (response) => {
-      // eslint-disable-next-line no-console -- surfacing the real gateway error instead of the generic modal message
+       
       console.error("Razorpay payment.failed", response.error);
       setPaying(false);
       void reportOutcome("failed");
