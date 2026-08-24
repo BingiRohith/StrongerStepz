@@ -37,7 +37,7 @@ export function FaqSection({
                 {item.question}
                 <span
                   aria-hidden="true"
-                  className="shrink-0 text-2xl leading-none text-primary transition-transform duration-300 ease-brand group-open:rotate-45"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center text-xl leading-none text-primary transition-transform duration-300 ease-brand group-open:rotate-45"
                 >
                   +
                 </span>

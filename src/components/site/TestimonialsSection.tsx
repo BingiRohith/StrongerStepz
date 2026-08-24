@@ -14,6 +14,8 @@ export interface TestimonialsSectionProps {
   testimonials: TestimonialViewModel[];
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 /**
@@ -23,11 +25,13 @@ export interface TestimonialsSectionProps {
  * active testimonials.
  */
 export function TestimonialsSection({
-  title = "What Clients Say About Us",
+  title = "Why people love us",
   subtitle = "Real stories from people who found their strength again.",
   testimonials,
   onRegisterClick,
-  seatsAvailable,
+  seatsAvailable: _seatsAvailable,
+  limitedSeatsEnabled,
+  limitedSeats,
 }: TestimonialsSectionProps) {
   if (testimonials.length === 0) {
     return null;
@@ -74,7 +78,7 @@ export function TestimonialsSection({
           <Button size="lg" onClick={onRegisterClick}>
             Register Now
           </Button>
-          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3" />
+          <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-3" />
         </div>
       </Container>
     </Section>

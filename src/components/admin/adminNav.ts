@@ -4,7 +4,6 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Workshops", href: "/admin/workshops" },
   { label: "Homepage Images", href: "/admin/homepage-images" },
-  { label: "Is This For Me?", href: "/admin/audience-content" },
   { label: "Registrations", href: "/admin/registrations" },
   { label: "Testimonials", href: "/admin/testimonials" },
   { label: "Real Life Stories", href: "/admin/real-life-stories" },

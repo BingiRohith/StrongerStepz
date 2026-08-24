@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "migrate:phase7": "tsx scripts/migrate-phase7.ts"
+    "migrate:phase7": "tsx scripts/migrate-phase7.ts",
+    "migrate:phase8": "tsx scripts/migrate-phase8.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.5.20",

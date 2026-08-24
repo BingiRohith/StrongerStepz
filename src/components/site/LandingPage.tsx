@@ -4,21 +4,17 @@ import { Button } from "@/components/ui/Button";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { formatWorkshopDate } from "@/utils/formatWorkshopDate";
-import { ctaContent, footerContent, siteContent, statsContent } from "@/mock/workshop.mock";
-import { AudienceSection } from "@/components/site/AudienceSection";
-import type { AudienceContent } from "@/validators/audienceContent.schema";
+import { ctaContent, footerContent, siteContent } from "@/mock/workshop.mock";
 import { BenefitsSection } from "@/components/site/BenefitsSection";
 import { CtaSection } from "@/components/site/CtaSection";
 import { DoctorsSection, type DoctorViewModel } from "@/components/site/DoctorsSection";
 import { FaqSection } from "@/components/site/FaqSection";
 import { Hero } from "@/components/site/Hero";
-import { LiveStatsBar } from "@/components/site/LiveStatsBar";
 import { PricingSection } from "@/components/site/PricingSection";
 import { RegisterModal } from "@/components/site/RegisterModal";
 import { RealLifeStoriesSection, type RealLifeStoryViewModel } from "@/components/site/RealLifeStoriesSection";
 import { TestimonialsSection, type TestimonialViewModel } from "@/components/site/TestimonialsSection";
 import type { WorkshopDocument } from "@/models/Workshop";
-import type { WorkshopStats } from "@/types/workshop";
 
 /** Server-fetched Workshop with its ObjectId serialized to a string so it can cross the Server → Client Component boundary. */
 export type WorkshopViewModel = Omit<WorkshopDocument, "_id"> & { _id: string };
@@ -26,7 +22,6 @@ export type WorkshopViewModel = Omit<WorkshopDocument, "_id"> & { _id: string };
 export interface LandingPageHomepageImages {
   hero: string;
   benefits: string;
-  audience: string;
 }
 
 export interface LandingPageProps {
@@ -35,11 +30,8 @@ export interface LandingPageProps {
   doctors: DoctorViewModel[];
   realLifeStories: RealLifeStoryViewModel[];
   homepageImages: LandingPageHomepageImages;
-  audienceContent: AudienceContent;
   /** Whether the active workshop still has open seats — drives the "Limited Seats" CTA notice across every Register/Join button. */
   seatsAvailable: boolean;
-  /** Live registered/community counts for the footer stats bar — see `RegistrationService.getStats()`. */
-  stats: WorkshopStats;
 }
 
 /**
@@ -59,9 +51,7 @@ export function LandingPage({
   doctors,
   realLifeStories,
   homepageImages,
-  audienceContent,
   seatsAvailable,
-  stats,
 }: LandingPageProps) {
   const registerModal = useDisclosure();
 
@@ -93,9 +83,6 @@ export function LandingPage({
           <p className="mt-5 text-sm text-white/60 italic">{footerContent.closingText}</p>
         </>
       }
-      afterFooter={
-        <LiveStatsBar stats={stats} registeredLabel={statsContent.registeredLabel} communityLabel={statsContent.communityLabel} />
-      }
     >
       <Hero
         title={workshop.title}
@@ -106,13 +93,15 @@ export function LandingPage({
         discoverHref="#doctors"
         onRegisterClick={registerModal.open}
         seatsAvailable={seatsAvailable}
+        limitedSeatsEnabled={workshop.limitedSeatsEnabled}
+        limitedSeats={workshop.limitedSeats}
       />
 
-      <TestimonialsSection testimonials={testimonials} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} />
+      <TestimonialsSection testimonials={testimonials} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} limitedSeatsEnabled={workshop.limitedSeatsEnabled} limitedSeats={workshop.limitedSeats} />
 
       <RealLifeStoriesSection stories={realLifeStories} />
 
-      <DoctorsSection doctors={doctors} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} />
+      <DoctorsSection doctors={doctors} onRegisterClick={registerModal.open} seatsAvailable={seatsAvailable} limitedSeatsEnabled={workshop.limitedSeatsEnabled} limitedSeats={workshop.limitedSeats} />
 
       <BenefitsSection
         items={workshop.benefits}
@@ -120,14 +109,8 @@ export function LandingPage({
         imageAlt="Bright and calm wellness studio"
         onRegisterClick={registerModal.open}
         seatsAvailable={seatsAvailable}
-      />
-
-      <AudienceSection
-        title={audienceContent.title}
-        positives={audienceContent.positives}
-        negatives={audienceContent.negatives}
-        imageSrc={homepageImages.audience}
-        imageAlt="Group of smiling older adults in a support circle"
+        limitedSeatsEnabled={workshop.limitedSeatsEnabled}
+        limitedSeats={workshop.limitedSeats}
       />
 
       <PricingSection
@@ -139,6 +122,8 @@ export function LandingPage({
         }}
         onRegisterClick={registerModal.open}
         seatsAvailable={seatsAvailable}
+        limitedSeatsEnabled={workshop.limitedSeatsEnabled}
+        limitedSeats={workshop.limitedSeats}
       />
 
       <FaqSection items={workshop.faq} />
@@ -149,6 +134,8 @@ export function LandingPage({
         items={ctaContent.items}
         onRegisterClick={registerModal.open}
         seatsAvailable={seatsAvailable}
+        limitedSeatsEnabled={workshop.limitedSeatsEnabled}
+        limitedSeats={workshop.limitedSeats}
       />
 
       <RegisterModal

@@ -30,23 +30,12 @@ export const questionnaireQ3AnswerSchema = z.enum([
   "I do strength training, yoga, or sports regularly.",
 ]);
 
-export const createQuestionnaireResponseSchema = z
-  .object({
-    registrationId: objectIdSchema,
-    question1Answer: questionnaireQ1AnswerSchema,
-    question1OtherText: z.string().min(1).optional(),
-    question2Answer: questionnaireQ2AnswerSchema,
-    question2OtherText: z.string().min(1).optional(),
-    question3Answer: questionnaireQ3AnswerSchema,
-  })
-  .refine((data) => data.question1Answer !== "Other" || Boolean(data.question1OtherText), {
-    message: "question1OtherText is required when question1Answer is \"Other\"",
-    path: ["question1OtherText"],
-  })
-  .refine((data) => data.question2Answer !== "Other" || Boolean(data.question2OtherText), {
-    message: "question2OtherText is required when question2Answer is \"Other\"",
-    path: ["question2OtherText"],
-  });
+export const createQuestionnaireResponseSchema = z.object({
+  registrationId: objectIdSchema,
+  // A workshop may intentionally have no questions; its registrant can still
+  // complete the post-registration PDF/WhatsApp flow with an empty snapshot.
+  questions: z.array(z.object({ questionId: objectIdSchema, answer: z.string().trim().min(1).max(5000) })),
+});
 
 export const listQuestionnaireResponsesQuerySchema = z.object({
   registrationId: objectIdSchema.optional(),

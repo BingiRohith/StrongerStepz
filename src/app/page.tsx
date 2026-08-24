@@ -11,10 +11,7 @@ import { TestimonialService } from "@/services/TestimonialService";
 import { DoctorService } from "@/services/DoctorService";
 import { RealLifeStoryService } from "@/services/RealLifeStoryService";
 import { HomepageImagesService } from "@/services/HomepageImagesService";
-import { AudienceContentService } from "@/services/AudienceContentService";
 import type { HomepageImages } from "@/validators/homepageImages.schema";
-import type { AudienceContent } from "@/validators/audienceContent.schema";
-import type { RegistrationStats } from "@/services/RegistrationService";
 
 /** Falls back to the original static assets until an admin uploads a replacement for that slot. */
 const FALLBACK_HOMEPAGE_IMAGES = {
@@ -22,6 +19,11 @@ const FALLBACK_HOMEPAGE_IMAGES = {
   benefits: "/assets/images/studio.png",
   audience: "/assets/images/community.png",
 };
+
+/** Converts lean Mongo values (ObjectIds, Dates and nested values) to a client-safe JSON payload. */
+function toClientValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
 
 // This page now depends on live MongoDB data — force per-request rendering
 // instead of Next trying to prerender it (and hit the database) at build time.
@@ -36,7 +38,7 @@ export const dynamic = "force-dynamic";
 const getActiveWorkshop = cache(async (): Promise<WorkshopViewModel | null> => {
   try {
     const workshop = await new WorkshopService().getActive();
-    return { ...workshop, _id: workshop._id.toString() };
+    return toClientValue({ ...workshop, _id: workshop._id.toString() });
   } catch (error) {
     if (error instanceof NotFoundError) {
       return null;
@@ -47,17 +49,17 @@ const getActiveWorkshop = cache(async (): Promise<WorkshopViewModel | null> => {
 
 const getActiveTestimonials = cache(async (): Promise<TestimonialViewModel[]> => {
   const testimonials = await new TestimonialService().getActiveOrdered();
-  return testimonials.map((testimonial) => ({ ...testimonial, _id: testimonial._id.toString() }));
+  return testimonials.map((testimonial) => toClientValue({ ...testimonial, _id: testimonial._id.toString() }));
 });
 
 const getActiveDoctors = cache(async (): Promise<DoctorViewModel[]> => {
   const doctors = await new DoctorService().getActiveOrdered();
-  return doctors.map((doctor) => ({ ...doctor, _id: doctor._id.toString() }));
+  return doctors.map((doctor) => toClientValue({ ...doctor, _id: doctor._id.toString() }));
 });
 
 const getActiveRealLifeStories = cache(async (): Promise<RealLifeStoryViewModel[]> => {
   const stories = await new RealLifeStoryService().getActiveOrdered();
-  return stories.map((story) => ({ ...story, _id: story._id.toString() }));
+  return stories.map((story) => toClientValue({ ...story, _id: story._id.toString() }));
 });
 
 /** Backs the "Limited Seats" CTA notice — hidden once the active workshop's registrationLimit is reached. */
@@ -73,14 +75,6 @@ const getHomepageImages = cache(async (): Promise<HomepageImages> => {
   return new HomepageImagesService().get();
 });
 
-const getAudienceContent = cache(async (): Promise<AudienceContent> => {
-  return new AudienceContentService().get();
-});
-
-/** Backs the live stats bar — always a fresh DB read (page is `force-dynamic`), never stale. */
-const getStats = cache(async (): Promise<RegistrationStats> => {
-  return new RegistrationService().getStats();
-});
 
 export async function generateMetadata(): Promise<Metadata> {
   const workshop = await getActiveWorkshop();
@@ -122,15 +116,13 @@ export default async function Home() {
     );
   }
 
-  const [testimonials, doctors, realLifeStories, homepageImages, audienceContent, seatsAvailable, stats] =
+  const [testimonials, doctors, realLifeStories, homepageImages, seatsAvailable] =
     await Promise.all([
       getActiveTestimonials(),
       getActiveDoctors(),
       getActiveRealLifeStories(),
       getHomepageImages(),
-      getAudienceContent(),
       getSeatsAvailable(),
-      getStats(),
     ]);
 
   return (
@@ -140,13 +132,10 @@ export default async function Home() {
       doctors={doctors}
       realLifeStories={realLifeStories}
       seatsAvailable={seatsAvailable}
-      stats={stats}
       homepageImages={{
         hero: homepageImages.hero?.url ?? FALLBACK_HOMEPAGE_IMAGES.hero,
         benefits: homepageImages.benefits?.url ?? FALLBACK_HOMEPAGE_IMAGES.benefits,
-        audience: homepageImages.audience?.url ?? FALLBACK_HOMEPAGE_IMAGES.audience,
       }}
-      audienceContent={audienceContent}
     />
   );
 }

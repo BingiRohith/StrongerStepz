@@ -10,6 +10,7 @@ const slugSchema = z
 const doctorSchema = z.object({ name: z.string().min(1) });
 const agendaItemSchema = z.object({ icon: z.string().min(1), text: z.string().min(1) });
 const faqItemSchema = z.object({ question: z.string().min(1), answer: z.string().min(1) });
+const questionnaireQuestionSchema = z.object({ _id: z.string().optional(), text: z.string().trim().min(1), type: z.enum(["option", "text"]).default("text"), options: z.array(z.string().trim().min(1)).default([]) }).refine((question) => question.type === "text" || question.options.length > 0, { message: "option questions need at least one option", path: ["options"] });
 
 /** Admin forms submit "" for a cleared optional URL field rather than omitting the key. */
 const optionalUrlSchema = z
@@ -24,6 +25,9 @@ export const createWorkshopSchema = z.object({
   subtitle: z.string().min(1),
   description: z.string().min(1),
   bannerImage: z.string().optional(),
+  limitedSeatsEnabled: z.boolean().optional(),
+  limitedSeats: z.number().int().positive().nullable().optional(),
+  questionnaireQuestions: z.array(questionnaireQuestionSchema).default([]),
   date: z.coerce.date(),
   time: z.string().min(1),
   duration: z.string().min(1),

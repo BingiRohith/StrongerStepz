@@ -13,6 +13,8 @@ export interface HeroProps {
   discoverHref: string;
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 /**
@@ -30,7 +32,9 @@ export function Hero({
   imageAlt,
   discoverHref,
   onRegisterClick,
-  seatsAvailable,
+  seatsAvailable: _seatsAvailable,
+  limitedSeatsEnabled,
+  limitedSeats,
 }: HeroProps) {
   return (
     <section
@@ -56,7 +60,7 @@ export function Hero({
               <Button type="button" variant="primary" onClick={onRegisterClick}>
                 Register Now
               </Button>
-              <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3 text-left" />
+              <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-3 text-left" />
             </div>
           </div>
         </div>
