@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { apiError } from "@/api/response";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { buildExportFilename, buildRegistrationsWorkbook } from "@/lib/excel/export";
+import { buildRegistrationsWorkbook, buildTimestampedExportFilename } from "@/lib/excel/export";
 import { RegistrationService } from "@/services/RegistrationService";
 import { WorkshopService } from "@/services/WorkshopService";
 
@@ -17,13 +17,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     await requireAdmin(request);
 
-    const workshopId = request.nextUrl.searchParams.get("workshopId");
-    const workshop = workshopId ? await workshopService.getById(workshopId) : await workshopService.getActive();
-    const registrations = await registrationService.list({ workshopId: workshop._id.toString() });
-
+    const workshopId = request.nextUrl.searchParams.get("workshopId") ?? undefined;
+    // Match the admin table's source of truth: registrations are primary.
+    // A missing/deleted workshop must never prevent its registrations exporting.
+    const registrations = await registrationService.list(workshopId ? { workshopId } : {});
     const workshops = await workshopService.list();
     const buffer = await buildRegistrationsWorkbook(registrations, new Map(workshops.map((item) => [item._id.toString(), item])));
-    const filename = buildExportFilename(workshop.title, workshop.date);
+    const filename = buildTimestampedExportFilename(workshopId ? "Workshop-Registrations" : "Registrations");
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
