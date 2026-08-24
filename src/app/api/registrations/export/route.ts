@@ -21,7 +21,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const workshop = workshopId ? await workshopService.getById(workshopId) : await workshopService.getActive();
     const registrations = await registrationService.list({ workshopId: workshop._id.toString() });
 
-    const buffer = await buildRegistrationsWorkbook(registrations);
+    const workshops = await workshopService.list();
+    const buffer = await buildRegistrationsWorkbook(registrations, new Map(workshops.map((item) => [item._id.toString(), item])));
     const filename = buildExportFilename(workshop.title, workshop.date);
 
     return new NextResponse(new Uint8Array(buffer), {

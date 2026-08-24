@@ -8,16 +8,19 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { WhatsappCommunityForm } from "@/components/admin/WhatsappCommunityForm";
+import { SocialMediaLinksForm } from "@/components/admin/SocialMediaLinksForm";
+import { SocialMediaService } from "@/services/SocialMediaService";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  const [workshop, whatsappCommunitySettings] = await Promise.all([
+  const [workshop, whatsappCommunitySettings, socialMediaLinks] = await Promise.all([
     new WorkshopService().getActive().catch((error: unknown) => {
       if (error instanceof NotFoundError) return null;
       throw error;
     }),
     new WhatsappCommunityService().get(),
+    new SocialMediaService().get(),
   ]);
 
   return (
@@ -50,6 +53,11 @@ export default async function AdminSettingsPage() {
             Shown after a registrant downloads the workshop PDF, on the questionnaire&apos;s thank-you page.
           </p>
           <WhatsappCommunityForm initialSettings={whatsappCommunitySettings} />
+        </Card>
+        <Card className="max-w-2xl p-8">
+          <h2 className="mb-1 font-heading text-lg text-primary-dark">Social Media Links</h2>
+          <p className="mb-6 text-ink-muted">Enabled links appear at the bottom of the public website.</p>
+          <SocialMediaLinksForm initialLinks={socialMediaLinks} />
         </Card>
       </div>
     </AdminLayout>

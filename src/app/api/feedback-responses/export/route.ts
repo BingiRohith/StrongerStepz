@@ -5,9 +5,13 @@ import { ValidationError } from "@/errors/ValidationError";
 import { buildFeedbackResponsesWorkbook, buildTimestampedExportFilename } from "@/lib/excel/export";
 import { FeedbackFormService } from "@/services/FeedbackFormService";
 import { FeedbackResponseService } from "@/services/FeedbackResponseService";
+import { RegistrationService } from "@/services/RegistrationService";
+import { WorkshopService } from "@/services/WorkshopService";
 
 const formService = new FeedbackFormService();
 const responseService = new FeedbackResponseService();
+const registrationService = new RegistrationService();
+const workshopService = new WorkshopService();
 
 /**
  * Streams an .xlsx file rather than the usual JSON envelope, so this route
@@ -29,7 +33,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const form = await formService.getById(formId);
     const responses = await responseService.listAll(formId, workshopId);
 
-    const buffer = await buildFeedbackResponsesWorkbook(form, responses);
+    const [registrations, workshops] = await Promise.all([registrationService.list(), workshopService.list()]);
+    const buffer = await buildFeedbackResponsesWorkbook(form, responses, { registrations: new Map(registrations.map((item) => [item._id.toString(), item])), workshops: new Map(workshops.map((item) => [item._id.toString(), item])) });
     const filename = buildTimestampedExportFilename(form.title);
 
     return new NextResponse(new Uint8Array(buffer), {

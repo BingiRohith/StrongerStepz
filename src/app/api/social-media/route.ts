@@ -1,0 +1,10 @@
+import type { NextRequest } from "next/server";
+import { apiSuccess } from "@/api/response";
+import { withErrorHandling } from "@/api/handler";
+import { parseOrThrow } from "@/api/validate";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { socialMediaLinksSchema } from "@/validators/socialMedia.schema";
+import { SocialMediaService } from "@/services/SocialMediaService";
+const service = new SocialMediaService();
+export const GET = withErrorHandling(async () => apiSuccess(await service.get()));
+export const PUT = withErrorHandling(async (request: NextRequest) => { await requireAdmin(request); return apiSuccess(await service.set(parseOrThrow(socialMediaLinksSchema, await request.json()))); });
