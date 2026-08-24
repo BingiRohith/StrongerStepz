@@ -16,12 +16,23 @@ export interface WorkshopFaqItem {
   answer: string;
 }
 
+export interface WorkshopQuestion {
+  _id?: Types.ObjectId;
+  text: string;
+  type?: "option" | "text";
+  options?: string[];
+}
+
 export interface WorkshopDocument {
   _id: Types.ObjectId;
   title: string;
   subtitle: string;
   description: string;
   bannerImage?: string;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
+  /** Optional for documents created before Phase 8; callers normalize to an empty array. */
+  questionnaireQuestions?: WorkshopQuestion[] | null;
   date: Date;
   time: string;
   duration: string;
@@ -64,6 +75,12 @@ const faqItemSchema = new Schema<WorkshopFaqItem>(
   { _id: false }
 );
 
+const questionSchema = new Schema<WorkshopQuestion>({
+  text: { type: String, required: true, trim: true },
+  type: { type: String, enum: ["option", "text"], default: "text" },
+  options: { type: [String], default: [] },
+});
+
 const workshopSchema = new Schema<WorkshopDocument>(
   {
     title: { type: String, required: true, trim: true },
@@ -72,6 +89,9 @@ const workshopSchema = new Schema<WorkshopDocument>(
     // No longer required — the homepage hero image now comes from the Settings-backed
     // "homepageImages" config (see HomepageImagesService), not from the active workshop.
     bannerImage: { type: String },
+    limitedSeatsEnabled: { type: Boolean, default: false },
+    limitedSeats: { type: Number, default: null },
+    questionnaireQuestions: { type: [questionSchema], default: [] },
     date: { type: Date, required: true },
     time: { type: String, required: true },
     duration: { type: String, required: true },

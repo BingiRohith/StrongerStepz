@@ -12,6 +12,8 @@ export interface BenefitsSectionProps {
   imageAlt: string;
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 /** "What You Will Learn" — the takeaway checklist, sourced from the active workshop's `benefits`. */
@@ -22,7 +24,9 @@ export function BenefitsSection({
   imageSrc,
   imageAlt,
   onRegisterClick,
-  seatsAvailable,
+  seatsAvailable: _seatsAvailable,
+  limitedSeatsEnabled,
+  limitedSeats,
 }: BenefitsSectionProps) {
   return (
     <Section>
@@ -47,7 +51,7 @@ export function BenefitsSection({
             ))}
           </ul>
           <Button onClick={onRegisterClick}>Register Now</Button>
-          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3 text-left" />
+          <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-3 text-left" />
         </div>
 
         <div className="relative order-1 aspect-square overflow-hidden rounded-3xl shadow-lg lg:order-2">

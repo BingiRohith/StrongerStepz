@@ -10,7 +10,6 @@ export interface PricingPlan {
   originalPrice?: number;
   includes: string[];
   ctaLabel?: string;
-  secureText?: string;
 }
 
 export interface PricingSectionProps {
@@ -20,6 +19,8 @@ export interface PricingSectionProps {
   plan: PricingPlan;
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 function formatInr(amount: number): string {
@@ -33,7 +34,9 @@ export function PricingSection({
   details,
   plan,
   onRegisterClick,
-  seatsAvailable,
+  seatsAvailable: _seatsAvailable,
+  limitedSeatsEnabled,
+  limitedSeats,
 }: PricingSectionProps) {
   const {
     title: planTitle = "Workshop Registration",
@@ -41,7 +44,6 @@ export function PricingSection({
     originalPrice,
     includes = [],
     ctaLabel = "Join the Workshop",
-    secureText = "🔒 Secure Checkout",
   } = plan;
 
   return (
@@ -88,8 +90,7 @@ export function PricingSection({
           <Button size="lg" className="w-full" onClick={onRegisterClick}>
             {ctaLabel}
           </Button>
-          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-4" />
-          <p className="mt-5 text-sm font-semibold text-ink-muted">{secureText}</p>
+          <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-4" />
         </aside>
       </Container>
     </Section>

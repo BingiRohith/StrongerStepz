@@ -15,6 +15,8 @@ export interface DoctorsSectionProps {
   doctors: DoctorViewModel[];
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 /**
@@ -28,7 +30,9 @@ export function DoctorsSection({
   title = "You Are In Safe Hands",
   doctors,
   onRegisterClick,
-  seatsAvailable,
+  seatsAvailable: _seatsAvailable,
+  limitedSeatsEnabled,
+  limitedSeats,
 }: DoctorsSectionProps) {
   if (doctors.length === 0) {
     return null;
@@ -74,7 +78,7 @@ export function DoctorsSection({
 
         <div className="mt-14 text-center">
           <Button onClick={onRegisterClick}>Register Now</Button>
-          <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-3" />
+          <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-3" />
         </div>
       </Container>
     </Section>

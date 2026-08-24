@@ -1,342 +1,51 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { QUESTIONNAIRE_PROMPTS } from "@/lib/constants/questionnaire";
+import { Textarea } from "@/components/ui/Textarea";
 
-const QUESTION1_OPTIONS = [
-  "I want to stay healthy as I age.",
-  "I have a specific health problem I'd like to improve.",
-  "My doctor advised me to learn more.",
-  "A family member or friend suggested this workshop.",
-  "I want to prevent future health problems.",
-  "I want to become stronger and more active.",
-  "I'm just curious and want to learn.",
-  "Other",
-];
+interface Question { _id: string; text: string; type: "option" | "text"; options: string[] }
+interface ApiEnvelope<T> { success: boolean; data?: T; error?: { message: string } }
+interface PdfDocumentView { _id: string; title: string }
+interface WhatsappCommunitySettings { inviteUrl: string; buttonText: string; enabled: boolean }
 
-const QUESTION2_OPTIONS = [
-  "I want to prevent future health problems.",
-  "I want to become stronger and more active.",
-  "I want to manage an existing health condition.",
-  "I'm here for a family member.",
-  "I'm a healthcare professional.",
-  "Other",
-];
-
-const QUESTION3_OPTIONS = [
-  "I spend most of my day sitting.",
-  "I walk around the house and do light chores.",
-  "I walk for at least 30 minutes most days.",
-  "I regularly exercise or attend fitness classes.",
-  "I do strength training, yoga, or sports regularly.",
-];
-
-interface ApiEnvelope<T> {
-  success: boolean;
-  data?: T;
-  error?: { code: string; message: string; details?: { fieldErrors?: Record<string, string[]> } };
-}
-
-interface PdfDocumentView {
-  _id: string;
-  title: string;
-  fileUrl: string;
-}
-
-interface WhatsappCommunitySettings {
-  inviteUrl: string;
-  buttonText: string;
-  enabled: boolean;
-}
-
-interface RadioQuestionProps {
-  legend: ReactNode;
-  name: string;
-  options: string[];
-  value: string;
-  onChange: (value: string) => void;
-  otherValue?: string;
-  onOtherChange?: (value: string) => void;
-  showOther?: boolean;
-  error?: string;
-  otherError?: string;
-  disabled?: boolean;
-}
-
-function RadioQuestion({
-  legend,
-  name,
-  options,
-  value,
-  onChange,
-  otherValue,
-  onOtherChange,
-  showOther,
-  error,
-  otherError,
-  disabled,
-}: RadioQuestionProps) {
-  return (
-    <fieldset className="text-left">
-      <legend className="mb-3 block font-semibold text-ink">{legend}</legend>
-      <div className="flex flex-col gap-2.5">
-        {options.map((option) => (
-          <label
-            key={option}
-            className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/5 hover:border-primary/40"
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              checked={value === option}
-              onChange={() => onChange(option)}
-              required
-              disabled={disabled}
-              className="mt-0.5 accent-primary"
-            />
-            <span className="text-ink">{option}</span>
-          </label>
-        ))}
-      </div>
-      {showOther && (
-        <Input
-          className="mt-3"
-          placeholder="Please specify"
-          value={otherValue ?? ""}
-          onChange={(event) => onOtherChange?.(event.target.value)}
-          required
-          disabled={disabled}
-          error={otherError}
-        />
-      )}
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-    </fieldset>
-  );
-}
-
-/**
- * Fixed, non-configurable 3-question questionnaire shown right after a free
- * registration completes (see RegisterModal). On submit: saves the
- * QuestionnaireResponse, then best-effort fetches the active PDF and starts
- * its download before showing the Thank You state — if there's no active
- * PDF, or the lookup fails, the Thank You state still shows.
- */
+/** Fetches the registration's workshop questions and submits immutable question-id/answer pairs. */
 export default function QuestionnairePage() {
-  const params = useParams<{ registrationId: string }>();
-  const registrationId = params.registrationId;
-
-  const [question1Answer, setQuestion1Answer] = useState("");
-  const [question1OtherText, setQuestion1OtherText] = useState("");
-  const [question2Answer, setQuestion2Answer] = useState("");
-  const [question2OtherText, setQuestion2OtherText] = useState("");
-  const [question3Answer, setQuestion3Answer] = useState("");
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<string | null>(null);
+  const { registrationId } = useParams<{ registrationId: string }>();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [pdf, setPdf] = useState<PdfDocumentView | null>(null);
   const [whatsappCommunity, setWhatsappCommunity] = useState<WhatsappCommunitySettings | null>(null);
-  const [joinedCommunity, setJoinedCommunity] = useState(false);
 
-  async function fetchActivePdf(): Promise<PdfDocumentView | undefined> {
-    const response = await fetch("/api/pdfs/active");
-    const body = (await response.json()) as ApiEnvelope<PdfDocumentView[]>;
-    return response.ok && body.success ? body.data?.[0] : undefined;
-  }
+  useEffect(() => {
+    fetch(`/api/questionnaire/${registrationId}`).then(async (response) => {
+      const body = await response.json() as ApiEnvelope<{ questions: Question[] }>;
+      if (!response.ok || !body.success || !body.data) throw new Error(body.error?.message ?? "Unable to load questionnaire.");
+      setQuestions(body.data.questions);
+    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
+  }, [registrationId]);
 
-  async function fetchWhatsappCommunity(): Promise<WhatsappCommunitySettings | undefined> {
-    const response = await fetch("/api/whatsapp-community");
-    const body = (await response.json()) as ApiEnvelope<WhatsappCommunitySettings>;
-    return response.ok && body.success ? body.data : undefined;
-  }
-
-  async function beginPdfDownloadAndFinish() {
-    try {
-      const [activePdf, whatsapp] = await Promise.all([
-        fetchActivePdf().catch(() => undefined),
-        fetchWhatsappCommunity().catch(() => undefined),
-      ]);
-
-      if (whatsapp) {
-        setWhatsappCommunity(whatsapp);
-      }
-
-      if (activePdf?.fileUrl) {
-        setPdf(activePdf);
-        const link = document.createElement("a");
-        link.href = `/api/pdfs/${activePdf._id}/download`;
-        link.download = activePdf.title || "workshop-guide.pdf";
-        link.rel = "noopener";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      }
-    } catch {
-      // No active PDF, or a lookup failed — still show Thank You gracefully.
-    } finally {
-      setSubmitted(true);
-      setSubmitting(false);
-    }
-  }
-
-  /** Opens the invite link in a new tab and best-effort records the join — fire-and-forget, since the current tab stays alive to let it complete. */
-  function handleJoinCommunityClick() {
-    if (joinedCommunity) return;
-    setJoinedCommunity(true);
-    fetch(`/api/registrations/${registrationId}/join-community`, { method: "PATCH" }).catch(() => {
-      // Best-effort — the click still opens the invite link either way.
-    });
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
-    setSubmitting(true);
-    setFormError(null);
-    setFieldErrors({});
-
+    if (questions.some((question) => !answers[question._id]?.trim())) { setError("Please answer every question."); return; }
+    setSubmitting(true); setError(null);
     try {
-      const response = await fetch("/api/questionnaire-responses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          registrationId,
-          question1Answer,
-          question1OtherText: question1Answer === "Other" ? question1OtherText : undefined,
-          question2Answer,
-          question2OtherText: question2Answer === "Other" ? question2OtherText : undefined,
-          question3Answer,
-        }),
-      });
-
-      const body = (await response.json()) as ApiEnvelope<unknown>;
-
-      if (!response.ok || !body.success) {
-        if (body.error?.code === "VALIDATION_ERROR" && body.error.details?.fieldErrors) {
-          const nextFieldErrors: Record<string, string> = {};
-          for (const [field, messages] of Object.entries(body.error.details.fieldErrors)) {
-            if (messages[0]) nextFieldErrors[field] = messages[0];
-          }
-          setFieldErrors(nextFieldErrors);
-        } else {
-          setFormError(body.error?.message ?? "Something went wrong. Please try again.");
-        }
-        setSubmitting(false);
-        return;
-      }
-
-      await beginPdfDownloadAndFinish();
-    } catch {
-      setFormError("Something went wrong. Please check your connection and try again.");
-      setSubmitting(false);
-    }
+      const response = await fetch("/api/questionnaire-responses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ registrationId, questions: questions.map((question) => ({ questionId: question._id, answer: answers[question._id]!.trim() })) }) });
+      const body = await response.json() as ApiEnvelope<unknown>;
+      if (!response.ok || !body.success) throw new Error(body.error?.message ?? "Unable to submit questionnaire.");
+      const [pdfResponse, communityResponse] = await Promise.all([fetch("/api/pdfs/active").catch(() => null), fetch("/api/whatsapp-community").catch(() => null)]);
+      if (pdfResponse?.ok) { const pdfBody = await pdfResponse.json() as ApiEnvelope<PdfDocumentView[]>; const activePdf = pdfBody.data?.[0]; if (activePdf) { setPdf(activePdf); const link = document.createElement("a"); link.href = `/api/pdfs/${activePdf._id}/download`; link.download = activePdf.title; document.body.appendChild(link); link.click(); link.remove(); } }
+      if (communityResponse?.ok) { const communityBody = await communityResponse.json() as ApiEnvelope<WhatsappCommunitySettings>; if (communityBody.data) setWhatsappCommunity(communityBody.data); }
+      setSubmitted(true);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to submit questionnaire."); }
+    finally { setSubmitting(false); }
   }
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-surface-light px-4 py-12 sm:px-6 sm:py-16">
-      <Card className="w-full max-w-2xl p-6 text-center sm:p-10">
-        {submitted ? (
-          <div>
-            <p className="mb-2 text-5xl">🎉</p>
-            <h1 className="mb-3 font-heading text-2xl text-primary-dark">Thank You!</h1>
-            <p className="mb-6 text-ink-muted">
-              Your registration is complete and your responses have been recorded. We can&apos;t wait to see you at the
-              workshop!
-            </p>
-            {pdf ? (
-              <>
-                <p className="mb-4 text-sm text-ink-muted">
-                  Your workshop guide download should begin automatically. If it doesn&apos;t, use the button below.
-                </p>
-                <a href={`/api/pdfs/${pdf._id}/download`} rel="noopener noreferrer" download={pdf.title}>
-                  <Button size="lg" className="w-full">
-                    Download {pdf.title}
-                  </Button>
-                </a>
-              </>
-            ) : (
-              <p className="text-sm text-ink-muted">See you at the workshop!</p>
-            )}
-            {whatsappCommunity?.enabled && whatsappCommunity.inviteUrl ? (
-              <a
-                href={whatsappCommunity.inviteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleJoinCommunityClick}
-                className="mt-4 block"
-              >
-                <Button size="lg" className="w-full bg-[#25D366] shadow-none hover:bg-[#1ebc59]">
-                  📱 {whatsappCommunity.buttonText}
-                </Button>
-              </a>
-            ) : null}
-          </div>
-        ) : (
-          <>
-            <h1 className="mb-2 font-heading text-2xl text-primary-dark sm:text-3xl">Just One More Step</h1>
-            <p className="mb-8 text-ink-muted">
-              Help us tailor the workshop to you by answering these 3 quick questions.
-            </p>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-              <RadioQuestion
-                legend={`1. ${QUESTIONNAIRE_PROMPTS.question1}`}
-                name="question1Answer"
-                options={QUESTION1_OPTIONS}
-                value={question1Answer}
-                onChange={setQuestion1Answer}
-                showOther={question1Answer === "Other"}
-                otherValue={question1OtherText}
-                onOtherChange={setQuestion1OtherText}
-                error={fieldErrors.question1Answer}
-                otherError={fieldErrors.question1OtherText}
-                disabled={submitting}
-              />
-              <RadioQuestion
-                legend={`2. ${QUESTIONNAIRE_PROMPTS.question2}`}
-                name="question2Answer"
-                options={QUESTION2_OPTIONS}
-                value={question2Answer}
-                onChange={setQuestion2Answer}
-                showOther={question2Answer === "Other"}
-                otherValue={question2OtherText}
-                onOtherChange={setQuestion2OtherText}
-                error={fieldErrors.question2Answer}
-                otherError={fieldErrors.question2OtherText}
-                disabled={submitting}
-              />
-              <RadioQuestion
-                legend={`3. ${QUESTIONNAIRE_PROMPTS.question3}`}
-                name="question3Answer"
-                options={QUESTION3_OPTIONS}
-                value={question3Answer}
-                onChange={setQuestion3Answer}
-                error={fieldErrors.question3Answer}
-                disabled={submitting}
-              />
-
-              {formError && (
-                <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                  {formError}
-                </p>
-              )}
-
-              <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-                {submitting ? "Submitting…" : "Submit"}
-              </Button>
-            </form>
-          </>
-        )}
-      </Card>
-    </main>
-  );
+  return <main className="flex min-h-screen items-center justify-center bg-surface-light px-4 py-12"><Card className="w-full max-w-2xl p-6 sm:p-10">{submitted ? <div className="text-center"><p className="mb-2 text-5xl">🎉</p><h1 className="mb-3 font-heading text-2xl text-primary-dark">Thank You!</h1><p className="text-ink-muted">Your responses have been recorded. We can&apos;t wait to see you at the workshop!</p>{pdf && <a className="mt-5 block" href={`/api/pdfs/${pdf._id}/download`}><Button className="w-full">Download {pdf.title}</Button></a>}{whatsappCommunity?.enabled && whatsappCommunity.inviteUrl && <a className="mt-4 block" href={whatsappCommunity.inviteUrl} target="_blank" rel="noopener noreferrer" onClick={() => { fetch(`/api/registrations/${registrationId}/join-community`, { method: "PATCH" }).catch(() => undefined); }}><Button className="w-full bg-[#25D366] shadow-none hover:bg-[#1ebc59]">📱 {whatsappCommunity.buttonText}</Button></a>}</div> : loading ? <p className="text-center text-ink-muted">Loading questionnaire…</p> : error && !questions.length ? <p role="alert" className="text-center text-red-600">{error}</p> : !questions.length ? <form onSubmit={submit} className="text-center"><h1 className="mb-2 font-heading text-2xl text-primary-dark">You&apos;re all set</h1><p className="mb-6 text-ink-muted">There are no questionnaire questions for this workshop.</p><Button type="submit" disabled={submitting}>{submitting ? "Continuing…" : "Continue"}</Button></form> : <form onSubmit={submit} className="flex flex-col gap-6"><div className="text-center"><h1 className="mb-2 font-heading text-2xl text-primary-dark">Just One More Step</h1><p className="text-ink-muted">Help us tailor this workshop to you.</p></div>{questions.map((question, index) => question.type === "option" ? <fieldset key={question._id}><legend className="mb-3 font-semibold text-ink">{index + 1}. {question.text}</legend>{question.options.map((option) => <label key={option} className="mb-2 flex items-center gap-3 rounded-xl border p-3"><input type="radio" name={question._id} required checked={answers[question._id] === option} onChange={() => setAnswers((current) => ({ ...current, [question._id]: option }))} disabled={submitting} /><span>{option}</span></label>)}</fieldset> : <Textarea key={question._id} label={`${index + 1}. ${question.text}`} rows={4} required value={answers[question._id] ?? ""} onChange={(event) => setAnswers((current) => ({ ...current, [question._id]: event.target.value }))} disabled={submitting} />)}{error && <p role="alert" className="text-sm text-red-600">{error}</p>}<Button type="submit" size="lg" className="w-full" disabled={submitting}>{submitting ? "Submitting…" : "Submit"}</Button></form>}</Card></main>;
 }

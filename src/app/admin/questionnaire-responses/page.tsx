@@ -120,9 +120,10 @@ export default function AdminQuestionnaireResponsesPage() {
         registration?.email.toLowerCase().includes(term) ||
         registration?.phone.toLowerCase().includes(term) ||
         registration?.registrationNumber.toLowerCase().includes(term) ||
-        response.question1Answer.toLowerCase().includes(term) ||
-        response.question2Answer.toLowerCase().includes(term) ||
-        response.question3Answer.toLowerCase().includes(term)
+        (response.questions?.some((question) => question.questionText.toLowerCase().includes(term) || question.answer.toLowerCase().includes(term)) ?? false) ||
+        (response.question1Answer?.toLowerCase().includes(term) ?? false) ||
+        (response.question2Answer?.toLowerCase().includes(term) ?? false) ||
+        (response.question3Answer?.toLowerCase().includes(term) ?? false)
       );
     });
   }, [responses, registrationsById, search]);
@@ -272,6 +273,12 @@ export default function AdminQuestionnaireResponsesPage() {
               )}
             </div>
 
+            {viewingResponse.questions?.length ? viewingResponse.questions.map((question) => (
+              <div key={`${question.questionId ?? question.questionText}`}>
+                <h4 className="mb-1 font-semibold text-ink">{question.questionText}</h4>
+                <p className="text-ink-muted">{question.answer}</p>
+              </div>
+            )) : <>
             <div>
               <h4 className="mb-1 font-semibold text-ink">{viewingResponse.question1Text ?? QUESTIONNAIRE_PROMPTS.question1}</h4>
               <p className="text-ink-muted">
@@ -294,6 +301,7 @@ export default function AdminQuestionnaireResponsesPage() {
               <h4 className="mb-1 font-semibold text-ink">{viewingResponse.question3Text ?? QUESTIONNAIRE_PROMPTS.question3}</h4>
               <p className="text-ink-muted">{viewingResponse.question3Answer}</p>
             </div>
+            </>}
           </div>
         )}
       </Dialog>

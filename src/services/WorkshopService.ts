@@ -45,11 +45,11 @@ export class WorkshopService {
   }
 
   async create(input: CreateWorkshopInput): Promise<WorkshopDocument> {
-    return this.repository.create(input);
+    return this.repository.create(input as unknown as Partial<WorkshopDocument>);
   }
 
   async update(id: string, input: UpdateWorkshopInput): Promise<WorkshopDocument> {
-    const workshop = await this.repository.updateById(id, input);
+    const workshop = await this.repository.updateById(id, input as unknown as Partial<WorkshopDocument>);
     if (!workshop) {
       throw new NotFoundError(`Workshop "${id}" not found`);
     }

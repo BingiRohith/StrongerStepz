@@ -27,6 +27,9 @@ export interface WorkshopFormInitialValue {
   zoomLink?: string;
   whatsappCommunityLink?: string;
   registrationLimit?: number | null;
+  limitedSeatsEnabled?: boolean;
+  limitedSeats?: number | null;
+  questionnaireQuestions?: { _id?: string; text: string; type?: "option" | "text"; options?: string[] }[];
   registrationOpenDate?: string;
   registrationCloseDate?: string;
   status?: WorkshopStatus;
@@ -59,6 +62,9 @@ interface FormState {
   zoomLink: string;
   whatsappCommunityLink: string;
   registrationLimit: string;
+  limitedSeatsEnabled: boolean;
+  limitedSeats: string;
+  questionnaireQuestions: { _id?: string; text: string; type: "option" | "text"; options: string[] }[];
   registrationOpenDate: string;
   registrationCloseDate: string;
   status: WorkshopStatus;
@@ -93,6 +99,9 @@ function buildInitialState(initialValue?: WorkshopFormInitialValue): FormState {
     zoomLink: initialValue?.zoomLink ?? "",
     whatsappCommunityLink: initialValue?.whatsappCommunityLink ?? "",
     registrationLimit: initialValue?.registrationLimit != null ? String(initialValue.registrationLimit) : "",
+    limitedSeatsEnabled: initialValue?.limitedSeatsEnabled ?? false,
+    limitedSeats: initialValue?.limitedSeats != null ? String(initialValue.limitedSeats) : "",
+    questionnaireQuestions: initialValue?.questionnaireQuestions?.length ? initialValue.questionnaireQuestions.map((question) => ({ ...question, type: question.type ?? "text", options: question.options ?? [] })) : [],
     registrationOpenDate: toDateInputValue(initialValue?.registrationOpenDate),
     registrationCloseDate: toDateInputValue(initialValue?.registrationCloseDate),
     status: initialValue?.status ?? "draft",
@@ -154,6 +163,9 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
       zoomLink: form.zoomLink,
       whatsappCommunityLink: form.whatsappCommunityLink,
       registrationLimit: form.registrationLimit === "" ? null : Number(form.registrationLimit),
+      limitedSeatsEnabled: form.limitedSeatsEnabled,
+      limitedSeats: form.limitedSeatsEnabled && form.limitedSeats !== "" ? Number(form.limitedSeats) : null,
+      questionnaireQuestions: form.questionnaireQuestions.map((question) => ({ ...question, text: question.text.trim(), options: question.type === "option" ? question.options.map((option) => option.trim()).filter(Boolean) : [] })).filter((question) => question.text),
       registrationOpenDate: form.registrationOpenDate || undefined,
       registrationCloseDate: form.registrationCloseDate || undefined,
       status: form.status,
@@ -223,6 +235,11 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
         <Input label="Zoom Link" type="url" value={form.zoomLink} onChange={(e) => update("zoomLink", e.target.value)} error={fieldErrors.zoomLink} placeholder="https://zoom.us/j/..." />
         <Input label="WhatsApp Community Link" type="url" value={form.whatsappCommunityLink} onChange={(e) => update("whatsappCommunityLink", e.target.value)} error={fieldErrors.whatsappCommunityLink} placeholder="https://chat.whatsapp.com/..." />
         <Input label="Registration Limit" type="number" min={1} value={form.registrationLimit} onChange={(e) => update("registrationLimit", e.target.value)} error={fieldErrors.registrationLimit} placeholder="Leave blank for unlimited" />
+        <label className="flex items-center gap-3 font-semibold text-ink">
+          <input type="checkbox" className="h-5 w-5 accent-primary" checked={form.limitedSeatsEnabled} onChange={(e) => update("limitedSeatsEnabled", e.target.checked)} />
+          Show limited-seats notice
+        </label>
+        {form.limitedSeatsEnabled ? <Input label="Limited Seats" type="number" min={1} required value={form.limitedSeats} onChange={(e) => update("limitedSeats", e.target.value)} error={fieldErrors.limitedSeats} placeholder="20" /> : <div />}
         <Select label="Status" options={statusOptions} value={form.status} onChange={(e) => update("status", e.target.value as WorkshopStatus)} />
         <Input label="Registration Open Date" type="date" value={form.registrationOpenDate} onChange={(e) => update("registrationOpenDate", e.target.value)} />
         <Input label="Registration Close Date" type="date" value={form.registrationCloseDate} onChange={(e) => update("registrationCloseDate", e.target.value)} />
@@ -230,6 +247,21 @@ export function WorkshopForm({ mode, workshopId, initialValue }: WorkshopFormPro
           <input type="checkbox" className="h-5 w-5 accent-primary" checked={form.featured} onChange={(e) => update("featured", e.target.checked)} />
           Featured (shown on the public landing page)
         </label>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="mb-1 font-heading text-lg text-primary-dark">Questionnaire Questions</h3>
+        <p className="mb-4 text-sm text-ink-muted">These questions apply only to this workshop. Submitted answers keep a permanent copy of the question text.</p>
+        <div className="flex flex-col gap-3">
+          {form.questionnaireQuestions.map((question, index) => (
+            <div key={question._id ?? index} className="flex items-start gap-3">
+              <ReorderControls canMoveUp={index > 0} canMoveDown={index < form.questionnaireQuestions.length - 1} onMoveUp={() => update("questionnaireQuestions", moveItem(form.questionnaireQuestions, index, -1))} onMoveDown={() => update("questionnaireQuestions", moveItem(form.questionnaireQuestions, index, 1))} />
+              <div className="flex-1"><Textarea rows={2} placeholder="What would you like to improve?" value={question.text} onChange={(e) => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, text: e.target.value } : item))} /><Select className="mt-2" value={question.type} onChange={(e) => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, type: e.target.value as "option" | "text" } : item))} options={[{ value: "text", label: "Written answer" }, { value: "option", label: "Selectable options" }]} />{question.type === "option" && <div className="mt-2 flex flex-col gap-2">{question.options.map((option, optionIndex) => <div key={optionIndex} className="flex gap-2"><ReorderControls canMoveUp={optionIndex > 0} canMoveDown={optionIndex < question.options.length - 1} onMoveUp={() => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, options: moveItem(item.options, optionIndex, -1) } : item))} onMoveDown={() => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, options: moveItem(item.options, optionIndex, 1) } : item))} /><Input className="flex-1" value={option} placeholder="Option" onChange={(e) => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, options: item.options.map((current, currentIndex) => currentIndex === optionIndex ? e.target.value : current) } : item))} /><Button type="button" variant="ghost" size="sm" onClick={() => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, options: item.options.filter((_, currentIndex) => currentIndex !== optionIndex) } : item))}>Remove</Button></div>)}<Button type="button" variant="secondary" size="sm" onClick={() => update("questionnaireQuestions", form.questionnaireQuestions.map((item, itemIndex) => itemIndex === index ? { ...item, options: [...item.options, ""] } : item))}>+ Add Option</Button></div>}</div>
+              <Button type="button" variant="ghost" size="sm" onClick={() => update("questionnaireQuestions", form.questionnaireQuestions.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
+            </div>
+          ))}
+        </div>
+        <Button type="button" variant="secondary" size="sm" className="mt-4" onClick={() => update("questionnaireQuestions", [...form.questionnaireQuestions, { text: "", type: "text", options: [] }])}>+ Add Question</Button>
       </Card>
 
       <Card className="p-6">

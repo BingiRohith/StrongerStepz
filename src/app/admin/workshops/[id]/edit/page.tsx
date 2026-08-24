@@ -25,6 +25,9 @@ export default async function EditWorkshopPage({ params }: { params: Promise<Par
     throw error;
   }
 
+  // Legacy workshops predate Phase 8 and legitimately have no field at all.
+  const questionnaireQuestions = workshop.questionnaireQuestions ?? [];
+
   return (
     <AdminLayout navItems={ADMIN_NAV_ITEMS} activeHref="/admin/workshops" pageTitle="Edit Workshop" headerActions={<LogoutButton />}>
       <WorkshopForm
@@ -47,6 +50,9 @@ export default async function EditWorkshopPage({ params }: { params: Promise<Par
           zoomLink: workshop.zoomLink,
           whatsappCommunityLink: workshop.whatsappCommunityLink,
           registrationLimit: workshop.registrationLimit,
+          limitedSeatsEnabled: workshop.limitedSeatsEnabled,
+          limitedSeats: workshop.limitedSeats,
+          questionnaireQuestions: questionnaireQuestions.map((question) => ({ _id: question._id?.toString(), text: question.text, type: question.type ?? "text", options: question.options ?? [] })),
           registrationOpenDate: workshop.registrationOpenDate?.toISOString(),
           registrationCloseDate: workshop.registrationCloseDate?.toISOString(),
           status: workshop.status,

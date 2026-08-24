@@ -9,6 +9,8 @@ export interface CtaSectionProps {
   items: string[];
   onRegisterClick: () => void;
   seatsAvailable: boolean;
+  limitedSeatsEnabled: boolean;
+  limitedSeats?: number | null;
 }
 
 /** Splits `title` on `accentPrefix` so the opening phrase can be styled as a brand accent, e.g. "Strength after 50" in "Strength after 50 is not about becoming young again." */
@@ -25,7 +27,7 @@ function renderAccentedTitle(title: string, accentPrefix: string) {
 }
 
 /** Closing emotional statement, ported from the legacy footer's opening lines, ahead of a final CTA. */
-export function CtaSection({ title, subtitle, items, onRegisterClick, seatsAvailable }: CtaSectionProps) {
+export function CtaSection({ title, subtitle, items, onRegisterClick, seatsAvailable: _seatsAvailable, limitedSeatsEnabled, limitedSeats }: CtaSectionProps) {
   return (
     <Section background="dark" className="pb-12 text-center">
       <Container>
@@ -48,7 +50,7 @@ export function CtaSection({ title, subtitle, items, onRegisterClick, seatsAvail
         <Button size="lg" onClick={onRegisterClick}>
           Register Now
         </Button>
-        <LimitedSeatsNotice seatsAvailable={seatsAvailable} className="mt-4" />
+        <LimitedSeatsNotice limitedSeatsEnabled={limitedSeatsEnabled} limitedSeats={limitedSeats} className="mt-4" />
       </Container>
     </Section>
   );

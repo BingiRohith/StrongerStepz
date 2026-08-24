@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
 import { QuestionnaireResponseRepository } from "@/repositories/QuestionnaireResponseRepository";
 import { RegistrationRepository } from "@/repositories/RegistrationRepository";
+import { WorkshopRepository } from "@/repositories/WorkshopRepository";
 import type { QuestionnaireResponseDocument } from "@/models/QuestionnaireResponse";
 import { NotFoundError } from "@/errors/NotFoundError";
 import { ConflictError } from "@/errors/ConflictError";
-import { QUESTIONNAIRE_PROMPTS } from "@/lib/constants/questionnaire";
 import type { PaginatedResult } from "@/types/pagination";
 import type {
   CreateQuestionnaireResponseInput,
@@ -43,17 +43,20 @@ export class QuestionnaireResponseService {
       throw new ConflictError("This registration has already submitted the questionnaire");
     }
 
+    const workshop = await new WorkshopRepository().findById(registration.workshopId.toString());
+    if (!workshop) throw new NotFoundError("Workshop for this registration was not found");
+    const questionnaireQuestions = workshop.questionnaireQuestions ?? [];
+    const currentQuestions = new Map(questionnaireQuestions.filter((question) => question._id).map((question) => [question._id!.toString(), question.text]));
+    const questions = input.questions.map((question) => {
+      const questionText = currentQuestions.get(question.questionId);
+      if (!questionText) throw new ConflictError("One or more questionnaire questions are no longer available. Please refresh the page.");
+      return { questionId: new Types.ObjectId(question.questionId), questionText, answer: question.answer };
+    });
+
     return this.repository.create({
       registrationId: new Types.ObjectId(input.registrationId),
       workshopId: registration.workshopId,
-      question1Answer: input.question1Answer,
-      question1OtherText: input.question1OtherText,
-      question2Answer: input.question2Answer,
-      question2OtherText: input.question2OtherText,
-      question3Answer: input.question3Answer,
-      question1Text: QUESTIONNAIRE_PROMPTS.question1,
-      question2Text: QUESTIONNAIRE_PROMPTS.question2,
-      question3Text: QUESTIONNAIRE_PROMPTS.question3,
+      questions,
     });
   }
 

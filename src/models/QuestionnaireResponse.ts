@@ -58,15 +58,17 @@ export interface QuestionnaireResponseDocument {
   registrationId: Types.ObjectId;
   /** Denormalized from the registration at submission time — lets admin views filter "Overall" vs. a specific workshop without a join. Optional/absent on pre-Phase-7 documents; backfilled by `scripts/migrate-phase7.ts` where the registration still exists. */
   workshopId?: Types.ObjectId;
-  question1Answer: QuestionnaireQ1Answer;
+  question1Answer?: QuestionnaireQ1Answer;
   question1OtherText?: string;
-  question2Answer: QuestionnaireQ2Answer;
+  question2Answer?: QuestionnaireQ2Answer;
   question2OtherText?: string;
-  question3Answer: QuestionnaireQ3Answer;
+  question3Answer?: QuestionnaireQ3Answer;
   /** Snapshot of the prompt text at submission time (see `src/lib/constants/questionnaire.ts`) — a later wording change never alters how an already-submitted response displays. Optional/absent on pre-Phase-7 documents; the admin UI falls back to the current constant for those. */
   question1Text?: string;
   question2Text?: string;
   question3Text?: string;
+  /** Scalable immutable question/answer snapshots. Legacy question1–3 fields remain readable. */
+  questions?: { questionId?: Types.ObjectId; questionText: string; answer: string }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -75,14 +77,18 @@ const questionnaireResponseSchema = new Schema<QuestionnaireResponseDocument>(
   {
     registrationId: { type: Schema.Types.ObjectId, ref: "Registration", required: true },
     workshopId: { type: Schema.Types.ObjectId, ref: "Workshop" },
-    question1Answer: { type: String, enum: QUESTIONNAIRE_Q1_ANSWERS, required: true },
+    question1Answer: { type: String, enum: QUESTIONNAIRE_Q1_ANSWERS },
     question1OtherText: { type: String, trim: true },
-    question2Answer: { type: String, enum: QUESTIONNAIRE_Q2_ANSWERS, required: true },
+    question2Answer: { type: String, enum: QUESTIONNAIRE_Q2_ANSWERS },
     question2OtherText: { type: String, trim: true },
-    question3Answer: { type: String, enum: QUESTIONNAIRE_Q3_ANSWERS, required: true },
+    question3Answer: { type: String, enum: QUESTIONNAIRE_Q3_ANSWERS },
     question1Text: { type: String, trim: true },
     question2Text: { type: String, trim: true },
     question3Text: { type: String, trim: true },
+    questions: {
+      type: [{ questionId: { type: Schema.Types.ObjectId }, questionText: { type: String, required: true, trim: true }, answer: { type: String, required: true, trim: true } }],
+      required: false,
+    },
   },
   { timestamps: true }
 );
