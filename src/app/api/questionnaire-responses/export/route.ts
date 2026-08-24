@@ -3,8 +3,12 @@ import { apiError } from "@/api/response";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { buildQuestionnaireResponsesWorkbook, buildTimestampedExportFilename } from "@/lib/excel/export";
 import { QuestionnaireResponseService } from "@/services/QuestionnaireResponseService";
+import { RegistrationService } from "@/services/RegistrationService";
+import { WorkshopService } from "@/services/WorkshopService";
 
 const service = new QuestionnaireResponseService();
+const registrationService = new RegistrationService();
+const workshopService = new WorkshopService();
 
 /**
  * Streams an .xlsx file rather than the usual JSON envelope, so this route
@@ -20,7 +24,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const workshopId = request.nextUrl.searchParams.get("workshopId") ?? undefined;
     const responses = await service.listAll(registrationId, workshopId);
 
-    const buffer = await buildQuestionnaireResponsesWorkbook(responses);
+    const [registrations, workshops] = await Promise.all([registrationService.list(), workshopService.list()]);
+    const buffer = await buildQuestionnaireResponsesWorkbook(responses, { registrations: new Map(registrations.map((item) => [item._id.toString(), item])), workshops: new Map(workshops.map((item) => [item._id.toString(), item])) });
     const filename = buildTimestampedExportFilename("Questionnaire-Responses");
 
     return new NextResponse(new Uint8Array(buffer), {

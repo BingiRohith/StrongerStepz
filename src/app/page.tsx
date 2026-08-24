@@ -11,6 +11,7 @@ import { TestimonialService } from "@/services/TestimonialService";
 import { DoctorService } from "@/services/DoctorService";
 import { RealLifeStoryService } from "@/services/RealLifeStoryService";
 import { HomepageImagesService } from "@/services/HomepageImagesService";
+import { SocialMediaService } from "@/services/SocialMediaService";
 import type { HomepageImages } from "@/validators/homepageImages.schema";
 
 /** Falls back to the original static assets until an admin uploads a replacement for that slot. */
@@ -74,6 +75,7 @@ const getSeatsAvailable = cache(async (): Promise<boolean> => {
 const getHomepageImages = cache(async (): Promise<HomepageImages> => {
   return new HomepageImagesService().get();
 });
+const getSocialMediaLinks = cache(async () => toClientValue(await new SocialMediaService().get()));
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -116,13 +118,14 @@ export default async function Home() {
     );
   }
 
-  const [testimonials, doctors, realLifeStories, homepageImages, seatsAvailable] =
+  const [testimonials, doctors, realLifeStories, homepageImages, seatsAvailable, socialMediaLinks] =
     await Promise.all([
       getActiveTestimonials(),
       getActiveDoctors(),
       getActiveRealLifeStories(),
       getHomepageImages(),
       getSeatsAvailable(),
+      getSocialMediaLinks(),
     ]);
 
   return (
@@ -132,6 +135,7 @@ export default async function Home() {
       doctors={doctors}
       realLifeStories={realLifeStories}
       seatsAvailable={seatsAvailable}
+      socialMediaLinks={socialMediaLinks}
       homepageImages={{
         hero: homepageImages.hero?.url ?? FALLBACK_HOMEPAGE_IMAGES.hero,
         benefits: homepageImages.benefits?.url ?? FALLBACK_HOMEPAGE_IMAGES.benefits,

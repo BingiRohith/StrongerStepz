@@ -70,7 +70,7 @@ export function PricingSection({
             {originalPrice !== undefined && originalPrice > price && (
               <span className="text-2xl font-semibold text-red-400 line-through">{formatInr(originalPrice)}</span>
             )}
-            {price === 0 ? "Giving for Free" : formatInr(price)}
+            {price === 0 ? "Join for Free" : formatInr(price)}
           </div>
           {includes.length > 0 && (
             <div className="mb-8 rounded-2xl bg-surface-light p-6 text-left">
